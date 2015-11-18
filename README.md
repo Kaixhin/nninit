@@ -11,7 +11,18 @@ luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/n
 ## Usage
 
 ```lua
+require 'nn'
 local nninit = require 'nninit'
+
+local model = nn.Sequential()
+model:add(nninit.xavier(nn.SpatialConvolution(1, 1, 2, 2)))
+model:add(nn.View(4))
+model:add(nninit.kaiming(nn.Linear(4, 3), 'uniform'))
+model:add(nn.ReLU())
+model:add(nninit.constant(nn.Linear(3, 2), 1))
+model:add(nn.LogSoftMax())
+
+print(model:forward(X))
 ```
 
 ## Acknowledgements
