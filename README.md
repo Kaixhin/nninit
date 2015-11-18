@@ -52,16 +52,16 @@ Fills weights ~ N(mean, stdv).
 Fills weights ~ U(a, b).
 
 #### nninit.xavier(module, dist, gainType)
-Fills weights with stdv = gain * sqrt(2 / (fanIn + fanOut)). Zeroes biases. Uses the uniform distribution by default.
+Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Zeroes biases. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
 
-Ref: Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
+> Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
 #### nninit.kaiming(module, dist, gainType)
-Fills weights with stdv = gain * sqrt(1 / fanIn). Zeroes biases. Uses the normal distribution by default.
+Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Zeroes biases. Uses the normal distribution by default.  
 Also known as He initialisation.
 
-Ref: He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
+> He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
 ## Acknowledgements
 
