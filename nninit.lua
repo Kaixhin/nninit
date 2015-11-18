@@ -1,0 +1,2 @@
+local nninit = {}
+return nninit

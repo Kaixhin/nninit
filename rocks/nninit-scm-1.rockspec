@@ -23,6 +23,6 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    "nninit.lua"
+    nninit = "nninit.lua"
   }
 }
