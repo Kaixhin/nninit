@@ -2,9 +2,17 @@
 
 Weight initialisation schemes for Torch7 neural network modules.
 
+## Installation
+
+```sh
+luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/nninit-scm-1.rockspec
+```
+
 ## Usage
 
-**TODO**
+```lua
+local nninit = require 'nninit'
+```
 
 ## Acknowledgements
 
