@@ -61,10 +61,10 @@ end
 --
 --  Also known as Glorot initialisation
 --]]
-nninit.xavier = function(module, gainType, dist)
+nninit.xavier = function(module, dist, gainType, ...)
   local fanIn, fanOut = calcFan(module)
   gainType = gainType or 'linear' -- Linear by default
-  local gain = calcGain(gainType)
+  local gain = calcGain(gainType, ...)
   dist = dist or 'uniform' -- Uniform by default
 
   local stdv = gain * math.sqrt(2 / (fanIn + fanOut))
@@ -86,10 +86,10 @@ end
 --
 --  Also known as He initialisation
 --]]
-nninit.kaiming = function(module, dist)
+nninit.kaiming = function(module, dist, gainType, ...)
   local fanIn = calcFan(module)
   gainType = gainType or 'linear' -- Linear by default
-  local gain = calcGain(gainType)
+  local gain = calcGain(gainType, ...)
   dist = dist or 'normal' -- Normal by default
 
   local stdv = gain * math.sqrt(1 / fanIn)
