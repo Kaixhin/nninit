@@ -6,16 +6,12 @@ local function calcFan(module)
 
   if typename == 'nn.Linear' then
     return module.weight:size(2), module.weight:size(1)
-  elseif typename == 'nn.SpatialConvolution' then
-    return module.nInputPlane * module.kH * module.kW, module.nOutputPlane * module.kH * module.kW
   elseif typename == 'nn.TemporalConvolution' then
     return module.weight:size(2), module.weight:size(1)
-  elseif typename == 'nn.HorizontalConvolution' then
-    return module.kH * module.kW, module.kH * module.kW
-  elseif typename == 'nn.VerticalConvolution' then
-    return module.kH * module.kW, module.kH * module.kW
-  elseif typename == 'nn.LateralConvolution' then
-    return module.nInputPlane, module.nOutputPlane
+  elseif typename == 'nn.SpatialConvolution' then
+    return module.nInputPlane * module.kW * module.kH, module.nOutputPlane * module.kW * module.kH
+  elseif typename == 'nn.VolumetricConvolution' then
+    return module.nInputPlane * module.kT * module.kW * module.kH, module.nOutputPlane * module.kT * module.kW * module.kH
   end
 end
 

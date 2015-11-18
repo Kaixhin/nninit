@@ -11,7 +11,7 @@ luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/n
 ## Example
 
 ```lua
-require 'nn'
+local nn = require 'nn'
 local nninit = require 'nninit'
 
 local model = nn.Sequential()
