@@ -15,15 +15,20 @@ local function calcFan(module)
   end
 end
 
--- Calculates gain given a type and optional parameters
-local function calcGain(gainType, ...)
+-- Returns the gain or calculates if given a gain type (with optional parameters)
+local function calcGain(gain, ...)
   local args = {...}
 
-  if gainType == 'linear' or gainType == 'sigmoid' then
+  -- Return gain if a number already
+  if type(gain) == 'number' then
+    return gain
+  end
+
+  if gain == 'linear' or gain == 'sigmoid' then
     return 1
-  elseif gainType == 'relu' then
+  elseif gain == 'relu' then
     return math.sqrt(2)
-  elseif gainType == 'lrelu' then
+  elseif gain == 'lrelu' then
     local leakiness = args[1]
     return math.sqrt(2 / (1 + math.pow(leakiness, 2)))
   end
@@ -78,10 +83,10 @@ end
 --
 --  Also known as Glorot initialisation
 --]]
-nninit.xavier = function(module, dist, gainType, ...)
+nninit.xavier = function(module, dist, gain, ...)
   local fanIn, fanOut = calcFan(module)
-  gainType = gainType or 'linear' -- Linear by default
-  local gain = calcGain(gainType, ...)
+  gain = gain or 'linear' -- Linear by default
+  gain = calcGain(gain, ...)
   dist = dist or 'uniform' -- Uniform by default
 
   local stdv = gain * math.sqrt(2 / (fanIn + fanOut))
@@ -103,10 +108,10 @@ end
 --
 --  Also known as He initialisation
 --]]
-nninit.kaiming = function(module, dist, gainType, ...)
+nninit.kaiming = function(module, dist, gain, ...)
   local fanIn = calcFan(module)
-  gainType = gainType or 'linear' -- Linear by default
-  local gain = calcGain(gainType, ...)
+  gain = gain or 'linear' -- Linear by default
+  gain = calcGain(gain, ...)
   dist = dist or 'normal' -- Normal by default
 
   local stdv = gain * math.sqrt(1 / fanIn)
@@ -126,10 +131,10 @@ end
 --  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
 --  arXiv preprint arXiv:1312.6120
 --]]
-nninit.orthogonal = function(module, gainType, ...)
+nninit.orthogonal = function(module, gain, ...)
   local fanIn, fanOut = calcFan(module)
-  gainType = gainType or 'linear' -- Linear by default
-  local gain = calcGain(gainType, ...)
+  gain = gain or 'linear' -- Linear by default
+  gain = calcGain(gain, ...)
 
   -- Construct random matrix
   local randMat = torch.Tensor(fanOut, fanIn):normal(0, 1)
