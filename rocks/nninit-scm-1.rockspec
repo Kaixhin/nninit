@@ -16,8 +16,7 @@ description = {
 }
 
 dependencies = {
-  "torch >= 7.0",
-  "nn >= 1.0"
+  "torch >= 7.0"
 }
 
 build = {

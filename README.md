@@ -12,12 +12,14 @@ luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/n
 
 ```lua
 local nn = require 'nn'
+require 'cunn'
+local cudnn = require 'cudnn'
 local nninit = require 'nninit'
 
-local X = torch.ones(1, 3, 3)
+local X = torch.ones(1, 3, 3):cuda()
 
 local model = nn.Sequential()
-model:add(nninit.orthogonal(nn.SpatialConvolution(1, 1, 2, 2)))
+model:add(nninit.orthogonal(cudnn.SpatialConvolution(1, 1, 2, 2)))
 model:add(nn.View(4))
 model:add(nninit.kaiming(nn.Linear(4, 4), 'uniform', 'lrelu', 1/3))
 model:add(nn.RReLU(1/3, 1/3))
@@ -25,6 +27,7 @@ model:add(nninit.constant(nn.Linear(4, 5), 1))
 model:add(nninit.xavier(nn.Linear(5, 3), 'normal', 1.1))
 model:add(nninit.sparse(nn.Linear(3, 2), 0.2))
 model:add(nn.LogSoftMax())
+model:cuda()
 
 print(model:forward(X))
 ```
