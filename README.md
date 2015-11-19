@@ -14,7 +14,7 @@ luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/n
 local nn = require 'nn'
 local nninit = require 'nninit'
 
-local X = torch.Tensor(1, 3, 3)
+local X = torch.ones(1, 3, 3)
 
 local model = nn.Sequential()
 model:add(nninit.orthogonal(nn.SpatialConvolution(1, 1, 2, 2)))
@@ -23,6 +23,7 @@ model:add(nninit.kaiming(nn.Linear(4, 4), 'uniform', 'lrelu', 1/3))
 model:add(nn.RReLU(1/3, 1/3))
 model:add(nninit.constant(nn.Linear(4, 5), 1))
 model:add(nninit.xavier(nn.Linear(5, 3)))
+model:add(nninit.sparse(nn.Linear(3, 2), 0.2))
 model:add(nn.LogSoftMax())
 
 print(model:forward(X))
@@ -70,6 +71,11 @@ Also known as He initialisation.
 Fills weights with a (normal-distributed) random orthogonal matrix. Zeroes biases.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
+
+#### nninit.sparse(module, sparsity)
+Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights. Does not zero biases (contrary to the paper).
+
+> Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
 
 ## Acknowledgements
 

@@ -132,4 +132,21 @@ nninit.orthogonal = function(module, gainType, ...)
   return module
 end
 
+--[[
+-- Martens, J. (2010)
+-- Deep learning via Hessian-free optimization
+-- In Proceedings of the 27th International Conference on Machine Learning (ICML-10)
+--]]
+nninit.sparse = function(module, sparsity)
+  local nElements = module.weight:nElement()
+  local nSparseElements = math.floor(sparsity * nElements)
+  local randIndices = torch.randperm(nElements):long()
+  local sparseIndices = randIndices:narrow(1, 1, nSparseElements)
+
+  -- Zero out selected indices
+  module.weight:view(nElements):indexFill(1, sparseIndices, 0)
+
+  return module
+end
+
 return nninit
