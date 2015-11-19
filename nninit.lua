@@ -143,7 +143,7 @@ nninit.orthogonal = function(module, gain, ...)
   -- Pick out orthogonal matrix
   local W
   if fanOut > fanIn then
-    W = U:narrow(2, 1, fanIn)
+    W = U
   else
     W = V:narrow(1, 1, fanOut)
   end
