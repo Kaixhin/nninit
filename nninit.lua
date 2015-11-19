@@ -100,4 +100,36 @@ nninit.kaiming = function(module, dist, gainType, ...)
   return module
 end
 
+--[[
+--  Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013)
+--  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
+--  arXiv preprint arXiv:1312.6120
+--]]
+nninit.orthogonal = function(module, gainType, ...)
+  local fanIn, fanOut = calcFan(module)
+  gainType = gainType or 'linear' -- Linear by default
+  local gain = calcGain(gainType, ...)
+
+  -- Construct random matrix
+  local randMat = torch.Tensor(fanOut, fanIn):normal(0, 1)
+  local U, __, V = torch.svd(randMat, 'A')
+
+  -- Pick out orthogonal matrix
+  local W
+  if fanOut > fanIn then
+    W = U:narrow(2, 1, fanIn)
+  else
+    W = V:narrow(1, 1, fanOut)
+  end
+  -- Resize
+  W:resize(module.weight:size())
+  -- Multiply by gain
+  W:mul(gain)
+
+  module.weight:copy(W)
+  module.bias:zero()
+
+  return module
+end
+
 return nninit

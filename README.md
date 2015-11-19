@@ -14,12 +14,15 @@ luarocks install https://raw.githubusercontent.com/Kaixhin/nninit/master/rocks/n
 local nn = require 'nn'
 local nninit = require 'nninit'
 
+local X = torch.Tensor(1, 3, 3)
+
 local model = nn.Sequential()
-model:add(nninit.xavier(nn.SpatialConvolution(1, 1, 2, 2)))
+model:add(nninit.orthogonal(nn.SpatialConvolution(1, 1, 2, 2)))
 model:add(nn.View(4))
-model:add(nninit.kaiming(nn.Linear(4, 3), 'uniform', 'lrelu', 1/3))
+model:add(nninit.kaiming(nn.Linear(4, 4), 'uniform', 'lrelu', 1/3))
 model:add(nn.RReLU(1/3, 1/3))
-model:add(nninit.constant(nn.Linear(3, 2), 1))
+model:add(nninit.constant(nn.Linear(4, 5), 1))
+model:add(nninit.xavier(nn.Linear(5, 3)))
 model:add(nn.LogSoftMax())
 
 print(model:forward(X))
@@ -62,6 +65,11 @@ Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Zeroes biases. Uses the norm
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
+
+#### nninit.orthogonal(module, gainType)
+Fills weights with a (normal-distributed) random orthogonal matrix. Zeroes biases.
+
+> Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
 ## Acknowledgements
 
