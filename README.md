@@ -39,62 +39,51 @@ print(model:forward(X))
 
 ## Usage
 
-**nninit** uses method chaining on modules - call the `init` method parameters.
+**nninit** uses method chaining on modules - call `init` with the method name and any parameters needed by the method. For example, `nn.Linear(5, 3):init('constant', 'w', 1)`.
 
 ### Gains
 
 Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `linear`.
 
-| Gain    | Parameters | Mapping                     |
-|---------|------------|-----------------------------|
-| linear  |            | 1                           |
-| sigmoid |            | 1                           |
-| relu    |            | sqrt(2)                     |
-| lrelu   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
+| Gain      | Parameters | Mapping                     |
+|-----------|------------|-----------------------------|
+| 'linear'  |            | 1                           |
+| 'sigmoid' |            | 1                           |
+| 'relu'    |            | sqrt(2)                     |
+| 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
 
-### Weight Initialisers
+### Initialiser Methods
 
-#### nninit.constant(module, val)
-Fills weights with a constant value.
+#### constant(wb, val)
+Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, with a constant value.
 
-#### nninit.normal(module, mean, stdv)
-Fills weights ~ N(mean, stdv).
+#### normal(wb, mean, stdv)
+Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ N(mean, stdv).
 
-#### nninit.uniform(module, a, b)
-Fills weights ~ U(a, b).
+#### uniform(wb, a, b)
+Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ U(a, b).
 
-#### nninit.xavier(module, dist, gain)
+#### xavier(dist, [gain])
 Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
-#### nninit.kaiming(module, dist, gain)
+#### kaiming(dist, [gain])
 Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
-#### nninit.orthogonal(module, gain)
-Fills weights with a (normal-distributed) random orthogonal matrix.
+#### orthogonal([gain])
+Fills weights with a (normally distributed) random orthogonal matrix.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
-#### nninit.sparse(module, sparsity)
+#### sparse(sparsity)
 Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
-
-### Bias Initialisers
-
-#### nninit.biasConstant(module, val)
-Fills biases with a constant value.
-
-#### nninit.biasNormal(module, mean, stdv)
-Fills biases ~ N(mean, stdv).
-
-#### nninit.biasUniform(module, a, b)
-Fills biases ~ U(a, b).
 
 ## Acknowledgements
 
