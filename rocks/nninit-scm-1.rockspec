@@ -24,5 +24,10 @@ build = {
   type = "builtin",
   modules = {
     nninit = "nninit.lua"
+  },
+  install = {
+    lua = {
+      nninit = "nninit.lua"
+    }
   }
 }
