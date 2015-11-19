@@ -1,4 +1,4 @@
-local nninit = {}
+local nn = require 'nn'
 
 -- Calculates fan in and fan out of module
 local function calcFan(module)
@@ -36,46 +36,38 @@ local function calcGain(gain, ...)
   end
 end
 
--- Fills weights with a constant value
-nninit.constant = function(module, val)
-  module.weight:fill(val)
 
-  return module
+-- Fills weights/biases with a constant value
+local constant = function(self, wb, val)
+  if wb == 'w' then
+    self.weight:fill(val)
+  elseif wb == 'b' then
+    self.bias:fill(val)
+  end
+
+  return self
 end
 
--- Fills biases with a constant value
-nninit.biasConstant = function(module, val)
-  module.bias:fill(val)
+-- Fills weights/biases ~ N(mean, stdv)
+local normal = function(self, wb, mean, stdv)
+  if wb == 'w' then
+    self.weight:normal(mean, stdv)
+  elseif wb == 'b' then
+    self.bias:normal(mean, stdv)
+  end
 
-  return module
+  return self
 end
 
--- Fills weights ~ N(mean, stdv)
-nninit.normal = function(module, mean, stdv)
-  module.weight:normal(mean, stdv)
+-- Fills weights/biases ~ U(a, b)
+local uniform = function(self, a, b)
+  if wb == 'w' then
+    self.weight:uniform(a, b)
+  elseif wb == 'b' then
+    self.bias:uniform(a, b)
+  end
 
-  return module
-end
-
--- Fills biases ~ N(mean, stdv)
-nninit.biasNormal = function(module, mean, stdv)
-  module.bias:normal(mean, stdv)
-
-  return module
-end
-
--- Fills weights ~ U(a, b)
-nninit.uniform = function(module, a, b)
-  module.weight:uniform(a, b)
-
-  return module
-end
-
--- Fills biases ~ U(a, b)
-nninit.biasUniform = function(module, a, b)
-  module.bias:uniform(a, b)
-
-  return module
+  return self
 end
 
 --[[
@@ -85,8 +77,8 @@ end
 --
 --  Also known as Glorot initialisation
 --]]
-nninit.xavier = function(module, dist, gain, ...)
-  local fanIn, fanOut = calcFan(module)
+local xavier = function(self, dist, gain, ...)
+  local fanIn, fanOut = calcFan(self)
   gain = gain or 'linear' -- Linear by default
   gain = calcGain(gain, ...)
   dist = dist or 'uniform' -- Uniform by default
@@ -94,12 +86,12 @@ nninit.xavier = function(module, dist, gain, ...)
   local stdv = gain * math.sqrt(2 / (fanIn + fanOut))
   if dist == 'uniform' then
     local b = stdv * math.sqrt(3)
-    module.weight:uniform(-b, b)
+    self.weight:uniform(-b, b)
   elseif dist == 'normal' then
-    module.weight:normal(0, stdv)
+    self.weight:normal(0, stdv)
   end
 
-  return module
+  return self
 end
 
 --[[
@@ -109,8 +101,8 @@ end
 --
 --  Also known as He initialisation
 --]]
-nninit.kaiming = function(module, dist, gain, ...)
-  local fanIn = calcFan(module)
+local kaiming = function(self, dist, gain, ...)
+  local fanIn = calcFan(self)
   gain = gain or 'linear' -- Linear by default
   gain = calcGain(gain, ...)
   dist = dist or 'normal' -- Normal by default
@@ -118,12 +110,12 @@ nninit.kaiming = function(module, dist, gain, ...)
   local stdv = gain * math.sqrt(1 / fanIn)
   if dist == 'uniform' then
     local b = stdv * math.sqrt(3)
-    module.weight:uniform(-b, b)
+    self.weight:uniform(-b, b)
   elseif dist == 'normal' then
-    module.weight:normal(0, stdv)
+    self.weight:normal(0, stdv)
   end
 
-  return module
+  return self
 end
 
 --[[
@@ -131,8 +123,8 @@ end
 --  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
 --  arXiv preprint arXiv:1312.6120
 --]]
-nninit.orthogonal = function(module, gain, ...)
-  local fanIn, fanOut = calcFan(module)
+local orthogonal = function(self, gain, ...)
+  local fanIn, fanOut = calcFan(self)
   gain = gain or 'linear' -- Linear by default
   gain = calcGain(gain, ...)
 
@@ -148,13 +140,13 @@ nninit.orthogonal = function(module, gain, ...)
     W = V:narrow(1, 1, fanOut)
   end
   -- Resize
-  W:resize(module.weight:size())
+  W:resize(self.weight:size())
   -- Multiply by gain
   W:mul(gain)
 
-  module.weight:copy(W)
+  self.weight:copy(W)
 
-  return module
+  return self
 end
 
 --[[
@@ -162,16 +154,33 @@ end
 -- Deep learning via Hessian-free optimization
 -- In Proceedings of the 27th International Conference on Machine Learning (ICML-10)
 --]]
-nninit.sparse = function(module, sparsity)
-  local nElements = module.weight:nElement()
+local sparse = function(self, sparsity)
+  local nElements = self.weight:nElement()
   local nSparseElements = math.floor(sparsity * nElements)
   local randIndices = torch.randperm(nElements):long()
   local sparseIndices = randIndices:narrow(1, 1, nSparseElements)
 
   -- Zero out selected indices
-  module.weight:view(nElements):indexFill(1, sparseIndices, 0)
+  self.weight:view(nElements):indexFill(1, sparseIndices, 0)
 
-  return module
+  return self
 end
 
-return nninit
+-- Add to nn.Module
+nn.Module.init = function(self, fn, ...)
+  if fn == 'constant' then
+    return constant(self, ...)
+  elseif fn == 'normal' then
+    return normal(self, ...)
+  elseif fn == 'uniform' then
+    return uniform(self, ...)
+  elseif fn == 'xavier' then
+    return xavier(self, ...)
+  elseif fn == 'kaiming' then
+    return kaiming(self, ...)
+  elseif fn == 'orthogonal' then
+    return orthogonal(self, ...)
+  elseif fn == 'sparse' then
+    return sparse(self, ...)
+  end
+end
