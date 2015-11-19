@@ -64,24 +64,24 @@ Fills weights ~ N(mean, stdv).
 Fills weights ~ U(a, b).
 
 #### nninit.xavier(module, dist, gain)
-Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Zeroes biases. Uses the uniform distribution by default.  
+Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
 #### nninit.kaiming(module, dist, gain)
-Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Zeroes biases. Uses the normal distribution by default.  
+Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
 #### nninit.orthogonal(module, gain)
-Fills weights with a (normal-distributed) random orthogonal matrix. Zeroes biases.
+Fills weights with a (normal-distributed) random orthogonal matrix.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
 #### nninit.sparse(module, sparsity)
-Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights. Does not zero biases (contrary to the paper).
+Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
 

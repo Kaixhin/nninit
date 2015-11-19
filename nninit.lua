@@ -98,7 +98,6 @@ nninit.xavier = function(module, dist, gain, ...)
   elseif dist == 'normal' then
     module.weight:normal(0, stdv)
   end
-  module.bias:zero()
 
   return module
 end
@@ -123,7 +122,6 @@ nninit.kaiming = function(module, dist, gain, ...)
   elseif dist == 'normal' then
     module.weight:normal(0, stdv)
   end
-  module.bias:zero()
 
   return module
 end
@@ -155,7 +153,6 @@ nninit.orthogonal = function(module, gain, ...)
   W:mul(gain)
 
   module.weight:copy(W)
-  module.bias:zero()
 
   return module
 end
