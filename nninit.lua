@@ -36,6 +36,13 @@ nninit.constant = function(module, val)
   return module
 end
 
+-- Fills biases with a constant value
+nninit.biasConstant = function(module, val)
+  module.bias:fill(val)
+
+  return module
+end
+
 -- Fills weights ~ N(mean, stdv)
 nninit.normal = function(module, mean, stdv)
   module.weight:normal(mean, stdv)
@@ -43,9 +50,23 @@ nninit.normal = function(module, mean, stdv)
   return module
 end
 
+-- Fills biases ~ N(mean, stdv)
+nninit.biasNormal = function(module, mean, stdv)
+  module.bias:normal(mean, stdv)
+
+  return module
+end
+
 -- Fills weights ~ U(a, b)
 nninit.uniform = function(module, a, b)
   module.weight:uniform(a, b)
+
+  return module
+end
+
+-- Fills biases ~ U(a, b)
+nninit.biasUniform = function(module, a, b)
+  module.bias:uniform(a, b)
 
   return module
 end

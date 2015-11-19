@@ -44,7 +44,7 @@ Optional gains can be calculated depending on the succeeding nonlinearity. By de
 | relu      |            | sqrt(2)                     |
 | lrelu     | leakiness  | sqrt(2 / (1 + leakiness^2)) |
 
-### Initialisers
+### Weight Initialisers
 
 #### nninit.constant(module, val)
 Fills weights with a constant value.
@@ -76,6 +76,17 @@ Fills weights with a (normal-distributed) random orthogonal matrix. Zeroes biase
 Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights. Does not zero biases (contrary to the paper).
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
+
+### Bias Initialisers
+
+#### nninit.biasConstant(module, val)
+Fills biases with a constant value.
+
+#### nninit.biasNormal(module, mean, stdv)
+Fills biases ~ N(mean, stdv).
+
+#### nninit.biasUniform(module, a, b)
+Fills biases ~ U(a, b).
 
 ## Acknowledgements
 
