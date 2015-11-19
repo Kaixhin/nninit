@@ -1,6 +1,11 @@
 # nninit
 
-Weight initialisation schemes for Torch7 neural network modules.
+Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Supported modules:
+
+- nn.Linear
+- nn.TemporalConvolution
+- nn.SpatialConvolution / cudnn.SpatialConvolution
+- nn.VolumetricConvolution / cudnn.VolumetricConvolution
 
 ## Installation
 
