@@ -138,7 +138,7 @@ nninit.orthogonal = function(module, gain, ...)
 
   -- Construct random matrix
   local randMat = torch.Tensor(fanOut, fanIn):normal(0, 1)
-  local U, __, V = torch.svd(randMat, 'A')
+  local U, __, V = torch.svd(randMat, 'S')
 
   -- Pick out orthogonal matrix
   local W
