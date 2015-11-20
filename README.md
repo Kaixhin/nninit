@@ -47,10 +47,10 @@ print(model:forward(X))
 Fills weights with a constant value.
 
 #### normal(mean, stdv)
-Fills weights ~ N(mean, stdv).
+Fills weights ~ N(`mean`, `stdv`).
 
 #### uniform(a, b)
-Fills weights ~ U(a, b).
+Fills weights ~ U(`a`, `b`).
 
 #### eye()
 Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
@@ -83,10 +83,14 @@ Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0
 Fills biases with a constant value.
 
 #### normal(mean, stdv)
-Fills biases ~ N(mean, stdv).
+Fills biases ~ N(`mean`, `stdv`).
 
 #### uniform(a, b)
-Fills biases ~ U(a, b).
+Fills biases ~ U(`a`, `b`).
+
+### Dists
+
+The 2 types of distribution supported are `'normal'` and `'uniform'`.
 
 ### Gains
 
