@@ -39,12 +39,12 @@ print(model:forward(X))
 
 ## Usage
 
-**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed. An example would be `nn.Linear(5, 3):wInit('xavier', 'normal'):bInit('constant', 0)`. Call `wInit` or `bInit` with the function name and any parameters needed by the function.
+**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed (see above for an example). Call `wInit` or `bInit` with the function name and any parameters needed by the function.
 
 ### wInit Functions
 
 #### constant(val)
-Fills weights with a constant value.
+Fills weights with the constant `val`.
 
 #### normal(mean, stdv)
 Fills weights ~ N(`mean`, `stdv`).
@@ -80,7 +80,7 @@ Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0
 ### bInit Functions
 
 #### constant(val)
-Fills biases with a constant value.
+Fills biases with the constant `val`.
 
 #### normal(mean, stdv)
 Fills biases ~ N(`mean`, `stdv`).
