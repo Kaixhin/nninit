@@ -70,6 +70,18 @@ local uniform = function(self, a, b)
   return self
 end
 
+-- Fills weights with the identity matrix
+local eye = function(self)
+  local fanIn, fanOut = calcFan(self)
+  local I = torch.eye(fanOut, fanIn)
+  -- Resize
+  I:resize(self.weight:size())
+  
+  self.weight:copy(I)
+
+  return self
+end
+
 --[[
 --  Glorot, X., & Bengio, Y. (2010)
 --  Understanding the difficulty of training deep feedforward neural networks
@@ -174,6 +186,8 @@ nn.Module.init = function(self, fn, ...)
     return normal(self, ...)
   elseif fn == 'uniform' then
     return uniform(self, ...)
+  elseif fn == 'eye' then
+    return eye(self, ...)
   elseif fn == 'xavier' then
     return xavier(self, ...)
   elseif fn == 'kaiming' then

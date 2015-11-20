@@ -63,6 +63,9 @@ Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ N(mean, stdv).
 #### uniform(wb, a, b)
 Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ U(a, b).
 
+#### eye()
+Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
+
 #### xavier(dist, [gain])
 Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
