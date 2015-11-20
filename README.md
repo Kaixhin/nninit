@@ -24,13 +24,13 @@ require 'nninit'
 local X = torch.ones(1, 3, 3):cuda()
 
 local model = nn.Sequential()
-model:add(cudnn.SpatialConvolution(1, 1, 2, 2):init('orthogonal'))
+model:add(cudnn.SpatialConvolution(1, 1, 2, 2):wInit('orthogonal'))
 model:add(nn.View(4))
-model:add(nn.Linear(4, 4):init('kaiming', 'uniform', 'lrelu', 1/3))
+model:add(nn.Linear(4, 4):wInit('kaiming', 'uniform', 'lrelu', 1/3))
 model:add(nn.RReLU(1/3, 1/3))
-model:add(nn.Linear(4, 5):init('normal', 'w', 1, 0.4))
-model:add(nn.Linear(5, 3):init('xavier', 'normal', 1.1))
-model:add(nn.Linear(3, 2):init('sparse', 0.2):init('constant', 'b', 0))
+model:add(nn.Linear(4, 5):wInit('normal', 1, 0.4))
+model:add(nn.Linear(5, 3):wInit('xavier', 'normal', 1.1))
+model:add(nn.Linear(3, 2):wInit('sparse', 0.2):bInit('constant', 0))
 model:add(nn.LogSoftMax())
 model:cuda()
 
@@ -39,29 +39,18 @@ print(model:forward(X))
 
 ## Usage
 
-**nninit** uses method chaining on modules - call `init` with the method name and any parameters needed by the method. For example, `nn.Linear(5, 3):init('constant', 'w', 1)`.
+**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed; for example, `nn.Linear(5, 3):wInit('xavier', 1):bInit('constant', 0)`. Call `wInit` or `bInit` with the function name and any parameters needed by the function.
 
-### Gains
+### wInit Functions
 
-Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `linear`.
+#### constant(val)
+Fills weights with a constant value.
 
-| Gain      | Parameters | Mapping                     |
-|-----------|------------|-----------------------------|
-| 'linear'  |            | 1                           |
-| 'sigmoid' |            | 1                           |
-| 'relu'    |            | sqrt(2)                     |
-| 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
+#### normal(mean, stdv)
+Fills weights ~ N(mean, stdv).
 
-### Initialiser Methods
-
-#### constant(wb, val)
-Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, with a constant value.
-
-#### normal(wb, mean, stdv)
-Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ N(mean, stdv).
-
-#### uniform(wb, a, b)
-Fills weights if `wb` is `'w'`, or biases if `wb` is `w`, ~ U(a, b).
+#### uniform(a, b)
+Fills weights ~ U(a, b).
 
 #### eye()
 Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
@@ -87,6 +76,28 @@ Fills weights with a (normally distributed) random orthogonal matrix.
 Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
+
+### bInit Functions
+
+#### constant(val)
+Fills biases with a constant value.
+
+#### normal(mean, stdv)
+Fills biases ~ N(mean, stdv).
+
+#### uniform(a, b)
+Fills biases ~ U(a, b).
+
+### Gains
+
+Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `linear`.
+
+| Gain      | Parameters | Mapping                     |
+|-----------|------------|-----------------------------|
+| 'linear'  |            | 1                           |
+| 'sigmoid' |            | 1                           |
+| 'relu'    |            | sqrt(2)                     |
+| 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
 
 ## Acknowledgements
 

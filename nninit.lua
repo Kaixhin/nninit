@@ -179,13 +179,13 @@ local sparse = function(self, sparsity)
 end
 
 -- Add to nn.Module
-nn.Module.init = function(self, fn, ...)
+nn.Module.wInit = function(self, fn, ...)
   if fn == 'constant' then
-    return constant(self, ...)
+    return constant(self, 'w', ...)
   elseif fn == 'normal' then
-    return normal(self, ...)
+    return normal(self, 'w', ...)
   elseif fn == 'uniform' then
-    return uniform(self, ...)
+    return uniform(self, 'w', ...)
   elseif fn == 'eye' then
     return eye(self, ...)
   elseif fn == 'xavier' then
@@ -196,5 +196,15 @@ nn.Module.init = function(self, fn, ...)
     return orthogonal(self, ...)
   elseif fn == 'sparse' then
     return sparse(self, ...)
+  end
+end
+
+nn.Module.bInit = function(self, fn, ...)
+  if fn == 'constant' then
+    return constant(self, 'b', ...)
+  elseif fn == 'normal' then
+    return normal(self, 'b', ...)
+  elseif fn == 'uniform' then
+    return uniform(self, 'b', ...)
   end
 end
