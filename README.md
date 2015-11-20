@@ -94,7 +94,7 @@ The 2 types of distribution supported are `'normal'` and `'uniform'`.
 
 ### Gains
 
-Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `linear`.
+Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `'linear'`.
 
 | Gain      | Parameters | Mapping                     |
 |-----------|------------|-----------------------------|
