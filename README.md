@@ -39,7 +39,7 @@ print(model:forward(X))
 
 ## Usage
 
-**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed; for example, `nn.Linear(5, 3):wInit('xavier', 1):bInit('constant', 0)`. Call `wInit` or `bInit` with the function name and any parameters needed by the function.
+**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed. An example would be `nn.Linear(5, 3):wInit('xavier', 'normal'):bInit('constant', 0)`. Call `wInit` or `bInit` with the function name and any parameters needed by the function.
 
 ### wInit Functions
 
@@ -55,13 +55,13 @@ Fills weights ~ U(a, b).
 #### eye()
 Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
 
-#### xavier(dist, [gain])
+#### xavier([dist, [gain]])
 Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
-#### kaiming(dist, [gain])
+#### kaiming([dist, [gain]])
 Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
 Also known as He initialisation.
 
