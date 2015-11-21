@@ -2,15 +2,15 @@ local nn = require 'nn'
 
 -- Calculates fan in and fan out of module
 local function calcFan(module)
-  local typename = module.__typename
+  local typename = torch.type(module)
 
   if typename == 'nn.Linear' then
     return module.weight:size(2), module.weight:size(1)
-  elseif typename == 'nn.TemporalConvolution' then
+  elseif typename:find('TemporalConvolution') then
     return module.weight:size(2), module.weight:size(1)
-  elseif typename == 'nn.SpatialConvolution' or typename == 'cudnn.SpatialConvolution' then
+  elseif typename:find('SpatialConvolution') then
     return module.nInputPlane * module.kW * module.kH, module.nOutputPlane * module.kW * module.kH
-  elseif typename == 'nn.VolumetricConvolution' or typename == 'cudnn.VolumetricConvolution' then
+  elseif typename:find('VolumetricConvolution') then
     return module.nInputPlane * module.kT * module.kW * module.kH, module.nOutputPlane * module.kT * module.kW * module.kH
   else
     error("Unsupported module")
@@ -35,7 +35,6 @@ local function calcGain(gain, ...)
     return math.sqrt(2 / (1 + math.pow(leakiness, 2)))
   end
 end
-
 
 -- Fills weights/biases with a constant value
 local constant = function(self, wb, val)
@@ -178,7 +177,7 @@ local sparse = function(self, sparsity)
   return self
 end
 
--- Add to nn.Module
+-- Add wInit to nn.Module
 nn.Module.wInit = function(self, fn, ...)
   if fn == 'constant' then
     return constant(self, 'w', ...)
@@ -199,6 +198,7 @@ nn.Module.wInit = function(self, fn, ...)
   end
 end
 
+-- Add bInit to nn.Module
 nn.Module.bInit = function(self, fn, ...)
   if fn == 'constant' then
     return constant(self, 'b', ...)
