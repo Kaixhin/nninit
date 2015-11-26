@@ -7,6 +7,8 @@ Weight initialisation schemes for Torch7 neural network modules. Works with `nn`
 - nn.SpatialConvolution / cudnn.SpatialConvolution
 - nn.VolumetricConvolution / cudnn.VolumetricConvolution
 
+Readme contents:
+
 - [Installation](#installation)
 - [Example](#example)
 - [Usage](#usage)
