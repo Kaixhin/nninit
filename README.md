@@ -7,6 +7,12 @@ Weight initialisation schemes for Torch7 neural network modules. Works with `nn`
 - nn.SpatialConvolution / cudnn.SpatialConvolution
 - nn.VolumetricConvolution / cudnn.VolumetricConvolution
 
+- [Installation](#installation)
+- [Example](#example)
+- [Usage](#usage)
+- [Development](#development)
+- [Acknowledgements](#acknowledgements)
+
 ## Installation
 
 ```sh
@@ -102,6 +108,10 @@ Optional gains can be calculated depending on the succeeding nonlinearity. If `g
 | 'sigmoid' |            | 1                           |
 | 'relu'    |            | sqrt(2)                     |
 | 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
+
+## Development
+
+To develop **nninit**/use it to test new initialisation schemes, `git clone`/download this repo and use `luarocks make rocks/nninit-scm-1.rockspec` to install **nninit** locally.
 
 ## Acknowledgements
 
