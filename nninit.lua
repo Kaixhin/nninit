@@ -58,12 +58,42 @@ local normal = function(self, wb, mean, stdv)
   return self
 end
 
+-- Adds to current weights/biases with ~ N(mean, stdv)
+local addNormal = function(self, wb, mean, stdv)
+  local noise
+
+  if wb == 'w' then
+    noise = torch.Tensor(self.weight:size()):normal(mean, stdv)
+    self.weight:add(noise)
+  elseif wb == 'b' then
+    noise = torch.Tensor(self.bias:size()):normal(mean, stdv)
+    self.bias:add(noise)
+  end
+
+  return self
+end
+
 -- Fills weights/biases ~ U(a, b)
 local uniform = function(self, a, b)
   if wb == 'w' then
     self.weight:uniform(a, b)
   elseif wb == 'b' then
     self.bias:uniform(a, b)
+  end
+
+  return self
+end
+
+-- Adds to current weights/biases with ~ U(a, b)
+local addUniform = function(self, wb, a, b)
+  local noise
+
+  if wb == 'w' then
+    noise = torch.Tensor(self.weight:size()):uniform(a, b)
+    self.weight:add(noise)
+  elseif wb == 'b' then
+    noise = torch.Tensor(self.bias:size()):uniform(a, b)
+    self.bias:add(noise)
   end
 
   return self
@@ -183,8 +213,12 @@ nn.Module.wInit = function(self, fn, ...)
     return constant(self, 'w', ...)
   elseif fn == 'normal' then
     return normal(self, 'w', ...)
+  elseif fn == 'addNormal' then
+    return addNormal(self, 'w', ...)
   elseif fn == 'uniform' then
     return uniform(self, 'w', ...)
+  elseif fn == 'addUniform' then
+    return addUniform(self, 'w', ...)
   elseif fn == 'eye' then
     return eye(self, ...)
   elseif fn == 'xavier' then
@@ -204,7 +238,11 @@ nn.Module.bInit = function(self, fn, ...)
     return constant(self, 'b', ...)
   elseif fn == 'normal' then
     return normal(self, 'b', ...)
+  elseif fn == 'addNormal' then
+    return addNormal(self, 'b', ...)
   elseif fn == 'uniform' then
     return uniform(self, 'b', ...)
+  elseif fn == 'addUniform' then
+    return addUniform(self, 'b', ...)
   end
 end

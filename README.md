@@ -57,8 +57,14 @@ Fills weights with the constant `val`.
 #### normal(mean, stdv)
 Fills weights ~ N(`mean`, `stdv`).
 
+#### addNormal(mean, stdv)
+Adds to current weights with ~ N(`mean`, `stdv`).
+
 #### uniform(a, b)
 Fills weights ~ U(`a`, `b`).
+
+#### addUniform(a, b)
+Adds to current weights with ~ U(`a`, `b`).
 
 #### eye()
 Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
@@ -93,8 +99,14 @@ Fills biases with the constant `val`.
 #### normal(mean, stdv)
 Fills biases ~ N(`mean`, `stdv`).
 
+#### addNormal(mean, stdv)
+Adds to current biases with ~ N(`mean`, `stdv`).
+
 #### uniform(a, b)
 Fills biases ~ U(`a`, `b`).
+
+#### addUniform(a, b)
+Adds to current biases with ~ U(`a`, `b`).
 
 ### Dists
 
