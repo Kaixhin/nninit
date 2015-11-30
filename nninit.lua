@@ -132,12 +132,12 @@ local eye = function(self)
   elseif typename:find('TemporalConvolution') then
     self.weight:zero()
     for i = 1, self.inputFrameSize do
-      self.weight[{{}, {(i-1)*self.kW + math.ceil(self.kW/2)}}]:fill(1)
+      self.weight[{{}, {(i-1)*self.kW + math.ceil(self.kW/2)}}]:fill(1/self.inputFrameSize)
     end
   elseif typename:find('SpatialConvolution') then
-    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kW, self.kH)[{{}, {}, math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1)
+    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kW, self.kH)[{{}, {}, math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1/self.nInputPlane)
   elseif typename:find('VolumetricConvolution') then
-    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kT, self.kW, self.kH)[{{}, {}, math.ceil(self.kT/2), math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1)
+    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kT, self.kW, self.kH)[{{}, {}, math.ceil(self.kT/2), math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1/self.nInputPlane)
   else
     error("Unsupported module")
   end
