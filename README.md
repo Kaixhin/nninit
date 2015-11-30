@@ -73,7 +73,8 @@ Fills weights ~ U(`a`, `b`).
 Adds to current weights with ~ U(`a`, `b`).
 
 #### eye()
-Fills weights with the identity matrix (for linear layers). Fills filters with the Dirac delta function (for convolutional layers).
+Fills weights with the identity matrix (for linear layers).  
+Fills filters with the Dirac delta function (for convolutional layers). Does not normalise by the number of input layers.
 
 #### xavier([dist, [gain]])
 Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
