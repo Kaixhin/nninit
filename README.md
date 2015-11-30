@@ -47,30 +47,37 @@ print(model:forward(X))
 
 ## Usage
 
-**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed (see above for an example). Call `wInit` or `bInit` with the function name and any parameters needed by the function.
+**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed (see above for an example). Call `wInit` or `bInit` with the function name and any parameters needed by the function. All functions are supported by `wInit`; functions supported by `bInit` are noted explicitly.
 
-### wInit Functions
+### Functions
 
 #### constant(val)
-Fills weights with the constant `val`.
+**Supported by `bInit`**.  
+Fills weights/biases with the constant `val`.
 
 #### addConstant(val)
-Adds to current weights with the constant `val`.
+**Supported by `bInit`**.  
+Adds to current weights/biases with the constant `val`.
 
 #### mulConstant(val)
-Multiplies current weights with the constant `val`.
+**Supported by `bInit`**.  
+Multiplies current weights/biases with the constant `val`.
 
 #### normal(mean, stdv)
-Fills weights ~ N(`mean`, `stdv`).
+**Supported by `bInit`**.  
+Fills weights/biases ~ N(`mean`, `stdv`).
 
 #### addNormal(mean, stdv)
-Adds to current weights with ~ N(`mean`, `stdv`).
+**Supported by `bInit`**.  
+Adds to current weights/biases with ~ N(`mean`, `stdv`).
 
 #### uniform(a, b)
-Fills weights ~ U(`a`, `b`).
+**Supported by `bInit`**.  
+Fills weights/biases ~ U(`a`, `b`).
 
 #### addUniform(a, b)
-Adds to current weights with ~ U(`a`, `b`).
+**Supported by `bInit`**.  
+Adds to current weights/biases with ~ U(`a`, `b`).
 
 #### eye()
 Fills weights with the identity matrix (for linear layers).  
@@ -97,29 +104,6 @@ Fills weights with a (normally distributed) random orthogonal matrix.
 Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
-
-### bInit Functions
-
-#### constant(val)
-Fills biases with the constant `val`.
-
-#### addConstant(val)
-Adds to current biases with the constant `val`.
-
-#### mulConstant(val)
-Multiplies current biases with the constant `val`.
-
-#### normal(mean, stdv)
-Fills biases ~ N(`mean`, `stdv`).
-
-#### addNormal(mean, stdv)
-Adds to current biases with ~ N(`mean`, `stdv`).
-
-#### uniform(a, b)
-Fills biases ~ U(`a`, `b`).
-
-#### addUniform(a, b)
-Adds to current biases with ~ U(`a`, `b`).
 
 ### Dists
 
