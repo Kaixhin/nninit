@@ -47,6 +47,28 @@ local constant = function(self, wb, val)
   return self
 end
 
+-- Adds to current weights/biases with a constant value
+local addConstant = function(self, wb, val)
+  if wb == 'w' then
+    self.weight:add(val)
+  elseif wb == 'b' then
+    self.bias:add(val)
+  end
+
+  return self
+end
+
+-- Multiplies current weights/biases with a constant value
+local mulConstant = function(self, wb, val)
+  if wb == 'w' then
+    self.weight:mul(val)
+  elseif wb == 'b' then
+    self.bias:mul(val)
+  end
+
+  return self
+end
+
 -- Fills weights/biases ~ N(mean, stdv)
 local normal = function(self, wb, mean, stdv)
   if wb == 'w' then
@@ -211,6 +233,10 @@ end
 nn.Module.wInit = function(self, fn, ...)
   if fn == 'constant' then
     return constant(self, 'w', ...)
+  elseif fn == 'addConstant' then
+    return addConstant(self, 'w', ...)
+  elseif fn == 'mulConstant' then
+    return mulConstant(self, 'w', ...)
   elseif fn == 'normal' then
     return normal(self, 'w', ...)
   elseif fn == 'addNormal' then
@@ -236,6 +262,10 @@ end
 nn.Module.bInit = function(self, fn, ...)
   if fn == 'constant' then
     return constant(self, 'b', ...)
+  elseif fn == 'addConstant' then
+    return addConstant(self, 'b', ...)
+  elseif fn == 'mulConstant' then
+    return mulConstant(self, 'b', ...)
   elseif fn == 'normal' then
     return normal(self, 'b', ...)
   elseif fn == 'addNormal' then

@@ -54,6 +54,12 @@ print(model:forward(X))
 #### constant(val)
 Fills weights with the constant `val`.
 
+#### addConstant(val)
+Adds to current weights with the constant `val`.
+
+#### mulConstant(val)
+Multiplies current weights with the constant `val`.
+
 #### normal(mean, stdv)
 Fills weights ~ N(`mean`, `stdv`).
 
@@ -95,6 +101,12 @@ Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0
 
 #### constant(val)
 Fills biases with the constant `val`.
+
+#### addConstant(val)
+Adds to current biases with the constant `val`.
+
+#### mulConstant(val)
+Multiplies current biases with the constant `val`.
 
 #### normal(mean, stdv)
 Fills biases ~ N(`mean`, `stdv`).
