@@ -121,14 +121,26 @@ local addUniform = function(self, wb, a, b)
   return self
 end
 
--- Fills weights with the identity matrix
+-- Fills weights with the identity matrix (for linear layers)
+-- Fills filters with the Dirac delta function (for convolutional layers)
 local eye = function(self)
-  local fanIn, fanOut = calcFan(self)
-  local I = torch.eye(fanOut, fanIn)
-  -- Resize
-  I:resize(self.weight:size())
-  
-  self.weight:copy(I)
+  local typename = torch.type(self)
+
+  if typename == 'nn.Linear' then
+    local I = torch.eye(self.weight:size(2), self.weight:size(1))
+    self.weight:copy(I)
+  elseif typename:find('TemporalConvolution') then
+    self.weight:zero()
+    for i = 1, self.inputFrameSize do
+      self.weight[{{}, {(i-1)*self.kW + math.ceil(self.kW/2)}}]:fill(1)
+    end
+  elseif typename:find('SpatialConvolution') then
+    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kW, self.kH)[{{}, {}, math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1)
+  elseif typename:find('VolumetricConvolution') then
+    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kT, self.kW, self.kH)[{{}, {}, math.ceil(self.kT/2), math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1)
+  else
+    error("Unsupported module")
+  end
 
   return self
 end

@@ -32,11 +32,11 @@ require 'nninit'
 local X = torch.ones(1, 3, 3):cuda()
 
 local model = nn.Sequential()
-model:add(cudnn.SpatialConvolution(1, 1, 2, 2):wInit('orthogonal'))
-model:add(nn.View(4))
-model:add(nn.Linear(4, 4):wInit('kaiming', 'uniform', 'lrelu', 1/3))
+model:add(cudnn.SpatialConvolution(2, 4, 2, 2):wInit('eye'):wInit('mulConstant', 1/2):wInit('addNormal', 0, 0.01):bInit('constant', 0))
+model:add(nn.View(4*2*2))
+model:add(nn.Linear(4*2*2, 4):wInit('kaiming', 'uniform', 'lrelu', 1/3))
 model:add(nn.RReLU(1/3, 1/3))
-model:add(nn.Linear(4, 5):wInit('normal', 1, 0.4))
+model:add(nn.Linear(4, 5):wInit('orthogonal'))
 model:add(nn.Linear(5, 3):wInit('xavier', 'normal', 1.1))
 model:add(nn.Linear(3, 2):wInit('sparse', 0.2):bInit('constant', 0))
 model:add(nn.LogSoftMax())
@@ -73,7 +73,7 @@ Fills weights ~ U(`a`, `b`).
 Adds to current weights with ~ U(`a`, `b`).
 
 #### eye()
-Fills weights with an `m x n` identity matrix (ones on the diagonals, zeros elsewhere).
+Fills weights with the identity matrix (for linear layers). Fills filters with the Dirac delta function (for convolutional layers).
 
 #### xavier([dist, [gain]])
 Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
