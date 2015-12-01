@@ -1,8 +1,8 @@
 # nninit
 
-Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Supported modules:
+Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows basic indexing to modify subsets of weights. Supported modules:
 
-- nn.Linear
+- nn.Linear / nn.LinearNoBias
 - nn.TemporalConvolution
 - nn.SpatialConvolution / cudnn.SpatialConvolution
 - nn.VolumetricConvolution / cudnn.VolumetricConvolution
@@ -10,8 +10,8 @@ Weight initialisation schemes for Torch7 neural network modules. Works with `nn`
 Readme contents:
 
 - [Installation](#installation)
-- [Example](#example)
 - [Usage](#usage)
+- [Example](#example)
 - [Development](#development)
 - [Acknowledgements](#acknowledgements)
 
@@ -21,61 +21,37 @@ Readme contents:
 luarocks install nninit
 ```
 
-## Example
-
-```lua
-local nn = require 'nn'
-require 'cunn'
-local cudnn = require 'cudnn'
-require 'nninit'
-
-local X = torch.ones(1, 3, 3):cuda()
-
-local model = nn.Sequential()
-model:add(cudnn.SpatialConvolution(2, 4, 2, 2):wInit('eye'):wInit('addNormal', 0, 0.01):bInit('constant', 0))
-model:add(nn.View(4*2*2))
-model:add(nn.Linear(4*2*2, 4):wInit('kaiming', 'uniform', 'lrelu', 1/3))
-model:add(nn.RReLU(1/3, 1/3))
-model:add(nn.Linear(4, 5):wInit('orthogonal'))
-model:add(nn.Linear(5, 3):wInit('xavier', 'normal', 1.1))
-model:add(nn.Linear(3, 2):wInit('sparse', 0.2):bInit('constant', 0))
-model:add(nn.LogSoftMax())
-model:cuda()
-
-print(model:forward(X))
-```
-
 ## Usage
 
 **nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed (see above for an example). Call `wInit` or `bInit` with the function name and any parameters needed by the function. All functions are supported by `wInit`; functions supported by `bInit` are noted explicitly.
 
 ### Functions
 
-#### constant(val)
+#### constant(val, [indices])
 **Supported by `bInit`**.  
 Fills weights/biases with the constant `val`.
 
-#### addConstant(val)
+#### addConstant(val, [indices])
 **Supported by `bInit`**.  
 Adds to current weights/biases with the constant `val`.
 
-#### mulConstant(val)
+#### mulConstant(val, [indices])
 **Supported by `bInit`**.  
 Multiplies current weights/biases with the constant `val`.
 
-#### normal(mean, stdv)
+#### normal(mean, stdv, [indices])
 **Supported by `bInit`**.  
 Fills weights/biases ~ N(`mean`, `stdv`).
 
-#### addNormal(mean, stdv)
+#### addNormal(mean, stdv, [indices])
 **Supported by `bInit`**.  
 Adds to current weights/biases with ~ N(`mean`, `stdv`).
 
-#### uniform(a, b)
+#### uniform(a, b, [indices])
 **Supported by `bInit`**.  
 Fills weights/biases ~ U(`a`, `b`).
 
-#### addUniform(a, b)
+#### addUniform(a, b, [indices])
 **Supported by `bInit`**.  
 Adds to current weights/biases with ~ U(`a`, `b`).
 
@@ -105,6 +81,10 @@ Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
 
+### Indices
+
+`indices` accepts anything called by the [indexing operator](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor--dim1dim2--or--dim1sdim1e-dim2sdim2e-), e.g. `{{1, 3}, {}}`.
+
 ### Dists
 
 The 2 types of distribution supported are `'normal'` and `'uniform'`.
@@ -119,6 +99,47 @@ Optional gains can be calculated depending on the succeeding nonlinearity. If `g
 | 'sigmoid' |            | 1                           |
 | 'relu'    |            | sqrt(2)                     |
 | 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
+
+## Example
+
+```lua
+local nn = require 'nn'
+require 'cunn'
+local cudnn = require 'cudnn'
+require 'rnn'
+require 'nninit'
+
+local batchSize = 5
+local imgSize = 16
+local nChannels = 3
+local nFilters = 8
+local rho = 6
+local hiddenSize = 2
+
+local cnn = nn.Sequential()
+cnn:add(cudnn.SpatialConvolution(nChannels, nFilters, 2, 2):wInit('eye'):wInit('mulConstant', 1/2):wInit('addNormal', 0, 0.01):bInit('constant', 0))
+cnn:add(nn.View(nFilters*15*15))
+cnn:add(nn.Linear(nFilters*15*15, nFilters):wInit('kaiming', 'uniform', 'lrelu', 1/3))
+cnn:add(nn.RReLU(1/3, 1/3))
+cnn:add(nn.Linear(nFilters, 6):wInit('orthogonal', 'relu'))
+cnn:add(cudnn.ReLU())
+cnn:add(nn.Linear(6, 4):wInit('xavier', 'normal', 1.1))
+cnn:add(nn.Linear(4, hiddenSize):wInit('sparse', 0.2):bInit('constant', 0))
+
+local model = nn.Sequential()
+model:add(nn.Sequencer(cnn))
+local lstm = nn.FastLSTM(hiddenSize, hiddenSize, rho)
+-- Note that chaining will pass through the module initialised, never parents
+lstm.i2g:bInit('constant', 1, {{3*hiddenSize-1, 3*hiddenSize}}) -- High forget gate bias
+model:add(nn.Sequencer(lstm))
+model:cuda()
+
+local inputs = {}
+for i = 1, rho do
+  table.insert(inputs, torch.ones(batchSize, nChannels, imgSize, imgSize):cuda())
+end
+print(model:forward(inputs))
+```
 
 ## Development
 

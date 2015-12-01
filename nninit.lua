@@ -4,7 +4,7 @@ local nn = require 'nn'
 local function calcFan(module)
   local typename = torch.type(module)
 
-  if typename == 'nn.Linear' then
+  if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
     return module.weight:size(2), module.weight:size(1)
   elseif typename:find('TemporalConvolution') then
     return module.weight:size(2), module.weight:size(1)
@@ -37,85 +37,97 @@ local function calcGain(gain, ...)
 end
 
 -- Fills weights/biases with a constant value
-local constant = function(self, wb, val)
+local constant = function(self, wb, val, indices)
+  indices = indices or {}
+
   if wb == 'w' then
-    self.weight:fill(val)
+    self.weight[indices]:fill(val)
   elseif wb == 'b' then
-    self.bias:fill(val)
+    self.bias[indices]:fill(val)
   end
 
   return self
 end
 
 -- Adds to current weights/biases with a constant value
-local addConstant = function(self, wb, val)
+local addConstant = function(self, wb, val, indices)
+  indices = indices or {}
+
   if wb == 'w' then
-    self.weight:add(val)
+    self.weight[indices]:add(val)
   elseif wb == 'b' then
-    self.bias:add(val)
+    self.bias[indices]:add(val)
   end
 
   return self
 end
 
 -- Multiplies current weights/biases with a constant value
-local mulConstant = function(self, wb, val)
+local mulConstant = function(self, wb, val, indices)
+  indices = indices or {}
+
   if wb == 'w' then
-    self.weight:mul(val)
+    self.weight[indices]:mul(val)
   elseif wb == 'b' then
-    self.bias:mul(val)
+    self.bias[indices]:mul(val)
   end
 
   return self
 end
 
 -- Fills weights/biases ~ N(mean, stdv)
-local normal = function(self, wb, mean, stdv)
+local normal = function(self, wb, mean, stdv, indices)
+  indices = indices or {}
+
   if wb == 'w' then
-    self.weight:normal(mean, stdv)
+    self.weight[indices]:normal(mean, stdv)
   elseif wb == 'b' then
-    self.bias:normal(mean, stdv)
+    self.bias[indices]:normal(mean, stdv)
   end
 
   return self
 end
 
 -- Adds to current weights/biases with ~ N(mean, stdv)
-local addNormal = function(self, wb, mean, stdv)
+local addNormal = function(self, wb, mean, stdv, indices)
+  indices = indices or {}
   local noise
 
   if wb == 'w' then
-    noise = torch.Tensor(self.weight:size()):normal(mean, stdv)
-    self.weight:add(noise)
+    noise = torch.Tensor(self.weight[indices]:size()):normal(mean, stdv)
+    self.weight[indices]:add(noise)
   elseif wb == 'b' then
-    noise = torch.Tensor(self.bias:size()):normal(mean, stdv)
-    self.bias:add(noise)
+    noise = torch.Tensor(self.bias[indices]:size()):normal(mean, stdv)
+    self.bias[indices]:add(noise)
   end
 
   return self
 end
 
 -- Fills weights/biases ~ U(a, b)
-local uniform = function(self, a, b)
+local uniform = function(self, a, b, indices)
+  indices = indices or {}
+
   if wb == 'w' then
-    self.weight:uniform(a, b)
+    self.weight[indices]:uniform(a, b)
   elseif wb == 'b' then
-    self.bias:uniform(a, b)
+    self.bias[indices]:uniform(a, b)
   end
 
   return self
 end
 
 -- Adds to current weights/biases with ~ U(a, b)
-local addUniform = function(self, wb, a, b)
+local addUniform = function(self, wb, a, b, indices)
+  indices = indices or {}
   local noise
 
   if wb == 'w' then
-    noise = torch.Tensor(self.weight:size()):uniform(a, b)
-    self.weight:add(noise)
+    noise = torch.Tensor(self.weight[indices]:size()):uniform(a, b)
+    self.weight[indices]:add(noise)
   elseif wb == 'b' then
-    noise = torch.Tensor(self.bias:size()):uniform(a, b)
-    self.bias:add(noise)
+    noise = torch.Tensor(self.bias[indices]:size()):uniform(a, b)
+    self.bias[indices]:add(noise)
   end
 
   return self
@@ -126,7 +138,7 @@ end
 local eye = function(self)
   local typename = torch.type(self)
 
-  if typename == 'nn.Linear' then
+  if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
     local I = torch.eye(self.weight:size(2), self.weight:size(1))
     self.weight:copy(I)
   elseif typename:find('TemporalConvolution') then
