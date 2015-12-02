@@ -45,10 +45,10 @@ module:init('weight', nninit.constant, 1)
 
 #### table
 
-The tensor is first accessed as a property of the module from the first element of the array, and a subtensor is then extracted using Torch's [indexing operator](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor--dim1dim2--or--dim1sdim1e-dim2sdim2e-). For example:
+The tensor is first accessed as a property of the module from the first element, and a subtensor is then extracted using Torch's [indexing operator](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor--dim1dim2--or--dim1sdim1e-dim2sdim2e-) applied to the second element. For example:
 
 ```lua
-module:init({'weight', { {1, 5}, {} }}, nninit.uniform, -1, 1)
+module:init({'weight', {{1, 5}, {}}}, nninit.uniform, -1, 1)
 ```
 
 #### function
@@ -60,6 +60,9 @@ module:init(function(m) return m.weight:narrow(1, 1, 10) end, nninit.normal, 0, 
 ```
 
 ### Initialisers
+
+#### nninit.copy(module, tensor, init)
+Copies the `init` tensor to the tensor to be initialised.
 
 #### nninit.constant(module, tensor, val)
 Fills tensor with the constant `val`.
@@ -88,18 +91,21 @@ Fills filters with the Dirac delta function (for convolutional layers). Normalis
 
 #### nninit.xavier([{[dist], [gain]}])
 Fills tensor with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
+Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
 #### nninit.kaiming([{[dist], [gain]}])
 Fills tensor with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
+Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
 #### nninit.orthogonal([{[gain]}])
 Fills weights with a (normally distributed) random orthogonal matrix.
+Optional named parameter [`gain`](#gains) can be passed in via a table.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
@@ -123,10 +129,10 @@ Gains can be calculated depending on the succeeding nonlinearity. If `gain` is a
 | 'relu'    |            | sqrt(2)                     |
 | 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
 
-If the `gain` must be calculated from additional parameters, `gain` must be passed as table with named parameters. For example:
+If the `gain` must be calculated from additional parameters, `gain` must be passed as table with the string as the first element as well as named parameters. For example:
 
 ```lua
-module:init('weight', nninit.kaiming, {gain = {gain = 'lrelu', leakiness = 0.3}})
+module:init('weight', nninit.kaiming, {gain = {'lrelu', leakiness = 0.3}})
 ```
 
 ## Example

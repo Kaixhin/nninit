@@ -29,7 +29,7 @@ local function calcGain(gain)
   -- Extract gain string if table
   if type(gain) == 'table' then
     local args = gain
-    gain = gain.gain
+    gain = gain[1]
   end
 
   -- Process gain strings with optional args
@@ -71,6 +71,13 @@ end
 -- nninit
 
 local nninit = {}
+
+-- Copies another tensor to the tensor to be initialised
+nninit.copy = function(module, tensor, init)
+  tensor:copy(init)
+
+  return module
+end
 
 -- Fills tensor with a constant value
 nninit.constant = function(module, tensor, val)
