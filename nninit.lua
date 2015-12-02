@@ -1,5 +1,7 @@
 local nn = require 'nn'
 
+-- Helper functions
+
 -- Calculates fan in and fan out of module
 local function calcFan(module)
   local typename = torch.type(module)
@@ -17,125 +19,112 @@ local function calcFan(module)
   end
 end
 
--- Returns the gain or calculates if given a gain type (with optional parameters)
-local function calcGain(gain, ...)
-  local args = {...}
-
+-- Returns the gain or calculates if given a gain type (with optional args)
+local function calcGain(gain)
   -- Return gain if a number already
   if type(gain) == 'number' then
     return gain
   end
 
+  -- Extract gain string if table
+  if type(gain) == 'table' then
+    local args = gain
+    gain = gain.gain
+  end
+
+  -- Process gain strings with optional args
   if gain == 'linear' or gain == 'sigmoid' then
     return 1
   elseif gain == 'relu' then
     return math.sqrt(2)
   elseif gain == 'lrelu' then
-    local leakiness = args[1]
-    return math.sqrt(2 / (1 + math.pow(leakiness, 2)))
+    return math.sqrt(2 / (1 + math.pow(args.leakiness, 2)))
   end
+
+  -- Return 1 by default
+  return 1
 end
 
--- Fills weights/biases with a constant value
-local constant = function(self, wb, val, indices)
-  indices = indices or {}
+-- init method
 
-  if wb == 'w' then
-    self.weight[indices]:fill(val)
-  elseif wb == 'b' then
-    self.bias[indices]:fill(val)
+-- Add init to nn.Module
+nn.Module.init = function(self, accessor, initialiser, ...)
+  -- Extract tensor to initialise
+  local tensor
+  if type(accessor) == 'string' then
+    tensor = self[accessor]
+  elseif type(accessor) == 'table' then
+    tensor = self[accessor[1]][accessor[2]]
+  elseif type(accessor) == 'function' then
+    tensor = accessor(self)
+  else
+    error("Unsupported accessor")
   end
 
+  -- Initialise tensor (given module and options)
+  initialiser(self, tensor, ...)
+
+  -- Return module for chaining
   return self
 end
 
--- Adds to current weights/biases with a constant value
-local addConstant = function(self, wb, val, indices)
-  indices = indices or {}
+-- nninit
 
-  if wb == 'w' then
-    self.weight[indices]:add(val)
-  elseif wb == 'b' then
-    self.bias[indices]:add(val)
-  end
+local nninit = {}
 
-  return self
+-- Fills tensor with a constant value
+nninit.constant = function(module, tensor, val)
+  tensor:fill(val)
+
+  return module
 end
 
--- Multiplies current weights/biases with a constant value
-local mulConstant = function(self, wb, val, indices)
-  indices = indices or {}
+-- Adds to current tensor with a constant value
+nninit.addConstant = function(module, tensor, val)
+  tensor:add(val)
 
-  if wb == 'w' then
-    self.weight[indices]:mul(val)
-  elseif wb == 'b' then
-    self.bias[indices]:mul(val)
-  end
-
-  return self
+  return module
 end
 
--- Fills weights/biases ~ N(mean, stdv)
-local normal = function(self, wb, mean, stdv, indices)
-  indices = indices or {}
+-- Multiplies current tensor by a constant value
+nninit.mulConstant = function(module, tensor, val)
+  tensor:mul(val)
 
-  if wb == 'w' then
-    self.weight[indices]:normal(mean, stdv)
-  elseif wb == 'b' then
-    self.bias[indices]:normal(mean, stdv)
-  end
-
-  return self
+  return module
 end
 
--- Adds to current weights/biases with ~ N(mean, stdv)
-local addNormal = function(self, wb, mean, stdv, indices)
-  indices = indices or {}
-  local noise
+-- Fills tensor ~ N(mean, stdv)
+nninit.normal = function(module, tensor, mean, stdv)
+  tensor:normal(mean, stdv)
 
-  if wb == 'w' then
-    noise = torch.Tensor(self.weight[indices]:size()):normal(mean, stdv)
-    self.weight[indices]:add(noise)
-  elseif wb == 'b' then
-    noise = torch.Tensor(self.bias[indices]:size()):normal(mean, stdv)
-    self.bias[indices]:add(noise)
-  end
-
-  return self
+  return module
 end
 
--- Fills weights/biases ~ U(a, b)
-local uniform = function(self, a, b, indices)
-  indices = indices or {}
+-- Adds to current tensor with ~ N(mean, stdv)
+nninit.addNormal = function(module, tensor, mean, stdv)
+  tensor:add(torch.Tensor(tensor:size()):normal(mean, stdv))
 
-  if wb == 'w' then
-    self.weight[indices]:uniform(a, b)
-  elseif wb == 'b' then
-    self.bias[indices]:uniform(a, b)
-  end
-
-  return self
+  return module
 end
 
--- Adds to current weights/biases with ~ U(a, b)
-local addUniform = function(self, wb, a, b, indices)
-  indices = indices or {}
-  local noise
+-- Fills tensor ~ U(a, b)
+nninit.uniform = function(module, tensor, a, b)
+  tensor:uniform(a, b)
 
-  if wb == 'w' then
-    noise = torch.Tensor(self.weight[indices]:size()):uniform(a, b)
-    self.weight[indices]:add(noise)
-  elseif wb == 'b' then
-    noise = torch.Tensor(self.bias[indices]:size()):uniform(a, b)
-    self.bias[indices]:add(noise)
-  end
+  return module
+end
 
-  return self
+-- Adds to current tensor with ~ U(a, b)
+nninit.addUniform = function(module, tensor, a, b)
+  tensor:add(torch.Tensor(tensor:size()):uniform(a, b))
+
+  return module
 end
 
 -- Fills weights with the identity matrix (for linear layers)
 -- Fills filters with the Dirac delta function (for convolutional layers)
-local eye = function(self)
+-- TODO: Fix for new API
+nninit.eye = function(self)
   local typename = torch.type(self)
 
   if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
@@ -164,21 +153,20 @@ end
 --
 --  Also known as Glorot initialisation
 --]]
-local xavier = function(self, dist, gain, ...)
-  local fanIn, fanOut = calcFan(self)
-  gain = gain or 'linear' -- Linear by default
-  gain = calcGain(gain, ...)
-  dist = dist or 'uniform' -- Uniform by default
+nninit.xavier = function(module, tensor, options)
+  local fanIn, fanOut = calcFan(module)
+  gain = calcGain(options.gain)
+  dist = options.dist or 'uniform' -- Uniform by default
 
   local stdv = gain * math.sqrt(2 / (fanIn + fanOut))
   if dist == 'uniform' then
     local b = stdv * math.sqrt(3)
-    self.weight:uniform(-b, b)
+    tensor:uniform(-b, b)
   elseif dist == 'normal' then
-    self.weight:normal(0, stdv)
+    tensor:normal(0, stdv)
   end
 
-  return self
+  return module
 end
 
 --[[
@@ -188,21 +176,20 @@ end
 --
 --  Also known as He initialisation
 --]]
-local kaiming = function(self, dist, gain, ...)
-  local fanIn = calcFan(self)
-  gain = gain or 'linear' -- Linear by default
-  gain = calcGain(gain, ...)
-  dist = dist or 'normal' -- Normal by default
+nninit.kaiming = function(module, tensor, options)
+  local fanIn = calcFan(module)
+  gain = calcGain(options.gain)
+  dist = options.dist or 'normal' -- Normal by default
 
   local stdv = gain * math.sqrt(1 / fanIn)
   if dist == 'uniform' then
     local b = stdv * math.sqrt(3)
-    self.weight:uniform(-b, b)
+    tensor:uniform(-b, b)
   elseif dist == 'normal' then
-    self.weight:normal(0, stdv)
+    tensor:normal(0, stdv)
   end
 
-  return self
+  return module
 end
 
 --[[
@@ -210,7 +197,8 @@ end
 --  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
 --  arXiv preprint arXiv:1312.6120
 --]]
-local orthogonal = function(self, gain, ...)
+-- TODO: Fix for new API
+nninit.orthogonal = function(self, gain, ...)
   local fanIn, fanOut = calcFan(self)
   gain = gain or 'linear' -- Linear by default
   gain = calcGain(gain, ...)
@@ -241,62 +229,16 @@ end
 -- Deep learning via Hessian-free optimization
 -- In Proceedings of the 27th International Conference on Machine Learning (ICML-10)
 --]]
-local sparse = function(self, sparsity)
-  local nElements = self.weight:nElement()
+nninit.sparse = function(module, tensor, sparsity)
+  local nElements = tensor:nElement()
   local nSparseElements = math.floor(sparsity * nElements)
   local randIndices = torch.randperm(nElements):long()
   local sparseIndices = randIndices:narrow(1, 1, nSparseElements)
 
   -- Zero out selected indices
-  self.weight:view(nElements):indexFill(1, sparseIndices, 0)
+  tensor:view(nElements):indexFill(1, sparseIndices, 0)
 
-  return self
+  return module
 end
 
--- Add wInit to nn.Module
-nn.Module.wInit = function(self, fn, ...)
-  if fn == 'constant' then
-    return constant(self, 'w', ...)
-  elseif fn == 'addConstant' then
-    return addConstant(self, 'w', ...)
-  elseif fn == 'mulConstant' then
-    return mulConstant(self, 'w', ...)
-  elseif fn == 'normal' then
-    return normal(self, 'w', ...)
-  elseif fn == 'addNormal' then
-    return addNormal(self, 'w', ...)
-  elseif fn == 'uniform' then
-    return uniform(self, 'w', ...)
-  elseif fn == 'addUniform' then
-    return addUniform(self, 'w', ...)
-  elseif fn == 'eye' then
-    return eye(self, ...)
-  elseif fn == 'xavier' then
-    return xavier(self, ...)
-  elseif fn == 'kaiming' then
-    return kaiming(self, ...)
-  elseif fn == 'orthogonal' then
-    return orthogonal(self, ...)
-  elseif fn == 'sparse' then
-    return sparse(self, ...)
-  end
-end
-
--- Add bInit to nn.Module
-nn.Module.bInit = function(self, fn, ...)
-  if fn == 'constant' then
-    return constant(self, 'b', ...)
-  elseif fn == 'addConstant' then
-    return addConstant(self, 'b', ...)
-  elseif fn == 'mulConstant' then
-    return mulConstant(self, 'b', ...)
-  elseif fn == 'normal' then
-    return normal(self, 'b', ...)
-  elseif fn == 'addNormal' then
-    return addNormal(self, 'b', ...)
-  elseif fn == 'uniform' then
-    return uniform(self, 'b', ...)
-  elseif fn == 'addUniform' then
-    return addUniform(self, 'b', ...)
-  end
-end
+return nninit

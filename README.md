@@ -1,6 +1,6 @@
 # nninit
 
-Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows basic indexing to modify subsets of weights. Supported modules:
+Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows arbitrary indexing of weights/biases/parameters. Supported modules:
 
 - nn.Linear / nn.LinearNoBias
 - nn.TemporalConvolution
@@ -23,67 +23,90 @@ luarocks install nninit
 
 ## Usage
 
-**nninit** adds 2 methods to `nn.Module`: `wInit` for weight initialisation and `bInit` for bias initialisation. It uses method chaining, where both methods return the module, allowing calls to be composed (see above for an example). Call `wInit` or `bInit` with the function name and any parameters needed by the function. All functions are supported by `wInit`; functions supported by `bInit` are noted explicitly.
+**`nninit`** adds an `init` method to `nn.Module`, with the following API:
 
-### Functions
+```lua
+module:init(accessor, initialiser, options...)
+```
 
-#### constant(val, [indices])
-**Supported by `bInit`**.  
-Fills weights/biases with the constant `val`.
+The `accessor` argument is used to extract the tensor to be initialised from the module. The `initialiser` argument is a function that takes the module, tensor, and further options; it adjusts the tensor and returns the module, allowing `init` calls to be chained. `nninit` comes with several initialiser functions.
 
-#### addConstant(val, [indices])
-**Supported by `bInit`**.  
-Adds to current weights/biases with the constant `val`.
+### Accessors
 
-#### mulConstant(val, [indices])
-**Supported by `bInit`**.  
-Multiplies current weights/biases with the constant `val`.
+The `accessor` argument is used to extract the tensor to be initialised from the module. It can either be a string, table, or function. 
 
-#### normal(mean, stdv, [indices])
-**Supported by `bInit`**.  
-Fills weights/biases ~ N(`mean`, `stdv`).
+#### string
 
-#### addNormal(mean, stdv, [indices])
-**Supported by `bInit`**.  
-Adds to current weights/biases with ~ N(`mean`, `stdv`).
+The tensor is accessed as a property of the module. For example:
 
-#### uniform(a, b, [indices])
-**Supported by `bInit`**.  
-Fills weights/biases ~ U(`a`, `b`).
+```lua
+module:init('weight', nninit.constant, 1)
+```
 
-#### addUniform(a, b, [indices])
-**Supported by `bInit`**.  
-Adds to current weights/biases with ~ U(`a`, `b`).
+#### table
 
-#### eye()
+The tensor is first accessed as a property of the module from the first element of the array, and a subtensor is then extracted using Torch's [indexing operator](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor--dim1dim2--or--dim1sdim1e-dim2sdim2e-). For example:
+
+```lua
+module:init({'weight', { {1, 5}, {} }}, nninit.uniform, -1, 1)
+```
+
+#### function
+
+The tensor must be returned as the result of the function applied to the module. For example:
+
+```lua
+module:init(function(m) return m.weight:narrow(1, 1, 10) end, nninit.normal, 0, 0.01)
+```
+
+### Initialisers
+
+#### nninit.constant(module, tensor, val)
+Fills tensor with the constant `val`.
+
+#### nninit.addConstant(module, tensor, val)
+Adds to current tensor with the constant `val`.
+
+#### nninit.mulConstant(module, tensor, val)
+Multiplies current tensor by the constant `val`.
+
+#### nninit.normal(module, tensor, mean, stdv)
+Fills tensor ~ N(`mean`, `stdv`).
+
+#### nninit.addNormal(module, tensor, mean, stdv)
+Adds to current tensor with ~ N(`mean`, `stdv`).
+
+#### nninit.uniform(module, tensor, a, b)
+Fills tensor ~ U(`a`, `b`).
+
+#### nninit.addUniform(module, tensor, a, b)
+Adds to current tensor with ~ U(`a`, `b`).
+
+#### nninit.eye()
 Fills weights with the identity matrix (for linear layers).  
 Fills filters with the Dirac delta function (for convolutional layers). Normalises by the number of input layers.
 
-#### xavier([dist, [gain]])
-Fills weights with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
+#### nninit.xavier([{[dist], [gain]}])
+Fills tensor with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
-#### kaiming([dist, [gain]])
-Fills weights with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
+#### nninit.kaiming([{[dist], [gain]}])
+Fills tensor with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
-#### orthogonal([gain])
+#### nninit.orthogonal([{[gain]}])
 Fills weights with a (normally distributed) random orthogonal matrix.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
-#### sparse(sparsity)
-Sets `(1 - sparsity)` percent of the weights to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the weights.
+#### nninit.sparse(sparsity)
+Sets `(1 - sparsity)` percent of the tensor to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the tensor.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
-
-### Indices
-
-`indices` accepts anything called by the [indexing operator](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor--dim1dim2--or--dim1sdim1e-dim2sdim2e-), e.g. `{{1, 3}, {}}`.
 
 ### Dists
 
@@ -91,7 +114,7 @@ The 2 types of distribution supported are `'normal'` and `'uniform'`.
 
 ### Gains
 
-Optional gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default the `gain` parameter is `'linear'`.
+Gains can be calculated depending on the succeeding nonlinearity. If `gain` is a number it is used directly; if `gain` is a string the following mapping is used. By default gains (where applicable) are set to 1.
 
 | Gain      | Parameters | Mapping                     |
 |-----------|------------|-----------------------------|
@@ -99,6 +122,12 @@ Optional gains can be calculated depending on the succeeding nonlinearity. If `g
 | 'sigmoid' |            | 1                           |
 | 'relu'    |            | sqrt(2)                     |
 | 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
+
+If the `gain` must be calculated from additional parameters, `gain` must be passed as table with named parameters. For example:
+
+```lua
+module:init('weight', nninit.kaiming, {gain = {gain = 'lrelu', leakiness = 0.3}})
+```
 
 ## Example
 
