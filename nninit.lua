@@ -27,8 +27,9 @@ local function calcGain(gain)
   end
 
   -- Extract gain string if table
+  local args
   if type(gain) == 'table' then
-    local args = gain
+    args = gain
     gain = gain[1]
   end
 

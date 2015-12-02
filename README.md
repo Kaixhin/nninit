@@ -104,7 +104,7 @@ Also known as He initialisation.
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
 #### nninit.orthogonal([{[gain]}])
-Fills weights with a (normally distributed) random orthogonal matrix.
+Fills weights with a (normally distributed) random orthogonal matrix.  
 Optional named parameter [`gain`](#gains) can be passed in via a table.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
