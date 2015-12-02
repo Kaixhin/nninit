@@ -85,31 +85,31 @@ Fills tensor ~ U(`a`, `b`).
 #### nninit.addUniform(module, tensor, a, b)
 Adds to current tensor with ~ U(`a`, `b`).
 
-#### nninit.eye()
+#### nninit.eye(module, tensor)
 Fills weights with the identity matrix (for linear layers).  
 Fills filters with the Dirac delta function (for convolutional layers). Normalises by the number of input layers.
 
-#### nninit.xavier([{[dist], [gain]}])
+#### nninit.xavier(module, tensor, [{[dist], [gain]}])
 Fills tensor with `stdv = gain * sqrt(2 / (fanIn + fanOut))`. Uses the uniform distribution by default.  
 Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table.  
 Also known as Glorot initialisation.
 
 > Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. In *International Conference on Artificial Intelligence and Statistics*.
 
-#### nninit.kaiming([{[dist], [gain]}])
+#### nninit.kaiming(module, tensor, [{[dist], [gain]}])
 Fills tensor with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
 Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
-#### nninit.orthogonal([{[gain]}])
+#### nninit.orthogonal(module, tensor, [{[gain]}])
 Fills weights with a (normally distributed) random orthogonal matrix.  
 Optional named parameter [`gain`](#gains) can be passed in via a table.
 
 > Saxe, A. M., McClelland, J. L., & Ganguli, S. (2013). Exact solutions to the nonlinear dynamics of learning in deep linear neural networks. *arXiv preprint arXiv:1312.6120*.
 
-#### nninit.sparse(sparsity)
+#### nninit.sparse(module, tensor, sparsity)
 Sets `(1 - sparsity)` percent of the tensor to 0, where `sparsity` is between 0 and 1. For example, a `sparsity` of 0.2 drops out 80% of the tensor.
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
