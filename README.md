@@ -86,6 +86,7 @@ Fills tensor ~ U(`a`, `b`).
 Adds to current tensor with ~ U(`a`, `b`).
 
 #### nninit.eye(module, tensor)
+**Only supports the module weights as the tensor.**  
 Fills weights with the identity matrix (for linear layers).  
 Fills filters with the Dirac delta function (for convolutional layers). Normalises by the number of input layers.
 
@@ -104,6 +105,7 @@ Also known as He initialisation.
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
 
 #### nninit.orthogonal(module, tensor, [{[gain]}])
+**Only supports the module weights as the tensor.**  
 Fills weights with a (normally distributed) random orthogonal matrix.  
 Optional named parameter [`gain`](#gains) can be passed in via a table.
 
@@ -142,7 +144,11 @@ local nn = require 'nn'
 require 'cunn'
 local cudnn = require 'cudnn'
 require 'rnn'
-require 'nninit'
+local nninit = require 'nninit'
+
+local getBias = function(module)
+  return module.bias
+end
 
 local batchSize = 5
 local imgSize = 16
@@ -152,20 +158,24 @@ local rho = 6
 local hiddenSize = 2
 
 local cnn = nn.Sequential()
-cnn:add(cudnn.SpatialConvolution(nChannels, nFilters, 2, 2):wInit('eye'):wInit('mulConstant', 1/2):wInit('addNormal', 0, 0.01):bInit('constant', 0))
+cnn:add(cudnn.SpatialConvolution(nChannels, nFilters, 2, 2):init('weight', nninit.eye)
+                                                           :init('weight', nninit.mulConstant, 1/2)
+                                                           :init('weight', nninit.addNormal, 0, 0.01)
+                                                           :init(getBias, nninit.constant, 0))
 cnn:add(nn.View(nFilters*15*15))
-cnn:add(nn.Linear(nFilters*15*15, nFilters):wInit('kaiming', 'uniform', 'lrelu', 1/3))
+cnn:add(nn.Linear(nFilters*15*15, nFilters):init('weight', nninit.kaiming, {dist = 'uniform', gain = {'lrelu', leakiness = 0.3}}))
 cnn:add(nn.RReLU(1/3, 1/3))
-cnn:add(nn.Linear(nFilters, 6):wInit('orthogonal', 'relu'))
+cnn:add(nn.Linear(nFilters, 6):init('weight', nninit.orthogonal, {gain = 'relu'}))
 cnn:add(cudnn.ReLU())
-cnn:add(nn.Linear(6, 4):wInit('xavier', 'normal', 1.1))
-cnn:add(nn.Linear(4, hiddenSize):wInit('sparse', 0.2):bInit('constant', 0))
+cnn:add(nn.Linear(6, 4):init('weight', nninit.xavier, {dist = 'normal', gain = 1.1}))
+cnn:add(nn.Linear(4, hiddenSize):init('weight', nninit.sparse, 0.2)
+                                :init(getBias, nninit.constant, 0))
 
 local model = nn.Sequential()
 model:add(nn.Sequencer(cnn))
 local lstm = nn.FastLSTM(hiddenSize, hiddenSize, rho)
 -- Note that chaining will pass through the module initialised, never parents
-lstm.i2g:bInit('constant', 1, {{3*hiddenSize-1, 3*hiddenSize}}) -- High forget gate bias
+lstm.i2g:init({'bias', {{3*hiddenSize-1, 3*hiddenSize}}}, nninit.constant, 1) -- High forget gate bias
 model:add(nn.Sequencer(lstm))
 model:cuda()
 

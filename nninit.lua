@@ -131,27 +131,31 @@ end
 
 -- Fills weights with the identity matrix (for linear layers)
 -- Fills filters with the Dirac delta function (for convolutional layers)
--- TODO: Fix for new API
-nninit.eye = function(self)
-  local typename = torch.type(self)
+-- TODO: Generalise for arbitrary tensors?
+nninit.eye = function(module, tensor)
+  if module.weight ~= tensor then
+    error("nninit.eye only supports 'weight' tensor")
+  end
+
+  local typename = torch.type(module)
 
   if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
-    local I = torch.eye(self.weight:size(2), self.weight:size(1))
-    self.weight:copy(I)
+    local I = torch.eye(tensor:size(1), tensor:size(2))
+    tensor:copy(I)
   elseif typename:find('TemporalConvolution') then
-    self.weight:zero()
-    for i = 1, self.inputFrameSize do
-      self.weight[{{}, {(i-1)*self.kW + math.ceil(self.kW/2)}}]:fill(1/self.inputFrameSize)
+    tensor:zero()
+    for i = 1, module.inputFrameSize do
+      tensor[{{}, {(i-1)*module.kW + math.ceil(module.kW/2)}}]:fill(1/module.inputFrameSize)
     end
   elseif typename:find('SpatialConvolution') then
-    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kW, self.kH)[{{}, {}, math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1/self.nInputPlane)
+    tensor:zero():view(module.nInputPlane, module.nOutputPlane, module.kW, module.kH)[{{}, {}, math.ceil(module.kW/2), math.ceil(module.kH/2)}]:fill(1/module.nInputPlane)
   elseif typename:find('VolumetricConvolution') then
-    self.weight:zero():view(self.nInputPlane, self.nOutputPlane, self.kT, self.kW, self.kH)[{{}, {}, math.ceil(self.kT/2), math.ceil(self.kW/2), math.ceil(self.kH/2)}]:fill(1/self.nInputPlane)
+    tensor:zero():view(module.nInputPlane, module.nOutputPlane, module.kT, module.kW, module.kH)[{{}, {}, math.ceil(module.kT/2), math.ceil(module.kW/2), math.ceil(module.kH/2)}]:fill(1/module.nInputPlane)
   else
     error("Unsupported module")
   end
 
-  return self
+  return module
 end
 
 --[[
@@ -205,11 +209,14 @@ end
 --  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
 --  arXiv preprint arXiv:1312.6120
 --]]
--- TODO: Fix for new API
-nninit.orthogonal = function(self, gain, ...)
-  local fanIn, fanOut = calcFan(self)
-  gain = gain or 'linear' -- Linear by default
-  gain = calcGain(gain, ...)
+-- TODO: Generalise for arbitrary tensors?
+nninit.orthogonal = function(module, tensor, options)
+  if module.weight ~= tensor then
+    error("nninit.orthogonal only supports 'weight' tensor")
+  end
+
+  local fanIn, fanOut = calcFan(module)
+  gain = calcGain(options.gain)
 
   -- Construct random matrix
   local randMat = torch.Tensor(fanOut, fanIn):normal(0, 1)
@@ -223,13 +230,13 @@ nninit.orthogonal = function(self, gain, ...)
     W = V:narrow(1, 1, fanOut)
   end
   -- Resize
-  W:resize(self.weight:size())
+  W:resize(tensor:size())
   -- Multiply by gain
   W:mul(gain)
 
-  self.weight:copy(W)
+  tensor:copy(W)
 
-  return self
+  return module
 end
 
 --[[
