@@ -26,10 +26,10 @@ luarocks install nninit
 **`nninit`** adds an `init` method to `nn.Module`, with the following API:
 
 ```lua
-module:init(accessor, initialiser, options...)
+module:init(accessor, initialiser, ...)
 ```
 
-The [`accessor`](#accessors) argument is used to extract the tensor to be initialised from the module. The [`initialiser`](#initialisers) argument is a function that takes the module, tensor, and further options; it adjusts the tensor and returns the module, allowing `init` calls to be chained. `nninit` comes with several initialiser functions.
+The [`accessor`](#accessors) argument is used to extract the tensor to be initialised from the module. The [`initialiser`](#initialisers) argument is a function that takes the module, tensor, and further options; it adjusts the tensor and returns the module, allowing `init` calls to be chained. `nninit` comes with several initialiser functions. `...` represents additional arguments for the initialiser function.
 
 ### Accessors
 
