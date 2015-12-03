@@ -1,6 +1,6 @@
 # nninit
 
-Weight initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows arbitrary indexing of weights/biases/parameters. Supported modules:
+Parameter initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows arbitrary indexing of weights/biases/parameters. Supported modules:
 
 - nn.Linear / nn.LinearNoBias
 - nn.TemporalConvolution
@@ -29,7 +29,7 @@ luarocks install nninit
 module:init(accessor, initialiser, options...)
 ```
 
-The `accessor` argument is used to extract the tensor to be initialised from the module. The `initialiser` argument is a function that takes the module, tensor, and further options; it adjusts the tensor and returns the module, allowing `init` calls to be chained. `nninit` comes with several initialiser functions.
+The [`accessor`](#accessors) argument is used to extract the tensor to be initialised from the module. The [`initialiser`](#initialisers) argument is a function that takes the module, tensor, and further options; it adjusts the tensor and returns the module, allowing `init` calls to be chained. `nninit` comes with several initialiser functions.
 
 ### Accessors
 
