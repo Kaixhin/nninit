@@ -167,6 +167,7 @@ end
 --]]
 nninit.xavier = function(module, tensor, options)
   local fanIn, fanOut = calcFan(module)
+  options = options or {}
   gain = calcGain(options.gain)
   dist = options.dist or 'uniform' -- Uniform by default
 
@@ -190,6 +191,7 @@ end
 --]]
 nninit.kaiming = function(module, tensor, options)
   local fanIn = calcFan(module)
+  options = options or {}
   gain = calcGain(options.gain)
   dist = options.dist or 'normal' -- Normal by default
 
@@ -216,6 +218,7 @@ nninit.orthogonal = function(module, tensor, options)
   end
 
   local fanIn, fanOut = calcFan(module)
+  options = options or {}
   gain = calcGain(options.gain)
 
   -- Construct random matrix
