@@ -211,13 +211,20 @@ end
 --  Exact solutions to the nonlinear dynamics of learning in deep linear neural networks
 --  arXiv preprint arXiv:1312.6120
 --]]
--- TODO: Generalise for arbitrary tensors?
 nninit.orthogonal = function(module, tensor, options)
-  if module.weight ~= tensor then
-    error("nninit.orthogonal only supports 'weight' tensor")
+  local sizes = tensor:size()
+  if #sizes < 2 then
+    error("nninit.orthogonal only supports tensors with 2 or more dimensions")
   end
 
-  local fanIn, fanOut = calcFan(module)
+  -- Calculate "fan in" and "fan out" for arbitrary tensors based on module conventions
+  local fanIn = sizes[2]
+  local fanOut = sizes[1]
+  for d = 3, #sizes do
+    fanIn = fanIn * sizes[d]
+    fanOut = fanOut * sizes[d]
+  end
+
   options = options or {}
   gain = calcGain(options.gain)
 
