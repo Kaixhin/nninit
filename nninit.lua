@@ -5,8 +5,9 @@ local nn = require 'nn'
 -- Calculates fan in and fan out of module
 local function calcFan(module)
   local typename = torch.type(module)
-
-  if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
+  if typename == 'nn.Linear' or
+     typename == 'nn.LinearNoBias' or
+     typename == 'nn.LookupTable' then
     return module.weight:size(2), module.weight:size(1)
   elseif typename:find('TemporalConvolution') then
     return module.weight:size(2), module.weight:size(1)
@@ -139,7 +140,9 @@ nninit.eye = function(module, tensor)
 
   local typename = torch.type(module)
 
-  if typename == 'nn.Linear' or typename == 'nn.LinearNoBias' then
+  if typename == 'nn.Linear' or
+     typename == 'nn.LinearNoBias' or
+     typename == 'nn.LookupTable' then
     local I = torch.eye(tensor:size(1), tensor:size(2))
     tensor:copy(I)
   elseif typename:find('TemporalConvolution') then
@@ -152,7 +155,7 @@ nninit.eye = function(module, tensor)
   elseif typename:find('VolumetricConvolution') then
     tensor:zero():view(module.nInputPlane, module.nOutputPlane, module.kT, module.kW, module.kH)[{{}, {}, math.ceil(module.kT/2), math.ceil(module.kW/2), math.ceil(module.kH/2)}]:fill(1/module.nInputPlane)
   else
-    error("Unsupported module")
+    error("Unsupported module for 'eye'")
   end
 
   return module
