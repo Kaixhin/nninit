@@ -3,6 +3,7 @@
 Parameter initialisation schemes for Torch7 neural network modules. Works with `nn`, and therefore `nngraph`. Allows arbitrary indexing of weights/biases/parameters. Supported modules:
 
 - nn.Linear / nn.LinearNoBias
+- nn.LookupTable
 - nn.TemporalConvolution
 - nn.SpatialConvolution / cudnn.SpatialConvolution
 - nn.VolumetricConvolution / cudnn.VolumetricConvolution
@@ -86,8 +87,8 @@ Fills tensor ~ U(`a`, `b`).
 Adds to current tensor with ~ U(`a`, `b`).
 
 #### nninit.eye(module, tensor)
-**Only supports the module weights as the tensor.**  
-Fills weights with the identity matrix (for linear layers).  
+**Only supports the module weights as the tensor. Relies on the module type to determine appropriate identity.**  
+Fills weights with the identity matrix (for linear layers/lookup tables).  
 Fills filters with the Dirac delta function (for convolutional layers). Normalises by the number of input layers.
 
 #### nninit.xavier(module, tensor, [{[dist], [gain]}])
