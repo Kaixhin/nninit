@@ -164,7 +164,10 @@ cnn:add(cudnn.SpatialConvolution(nChannels, nFilters, 2, 2):init('weight', nnini
                                                            :init('weight', nninit.addNormal, 0, 0.01)
                                                            :init(getBias, nninit.constant, 0))
 cnn:add(nn.View(nFilters*15*15))
-cnn:add(nn.Linear(nFilters*15*15, nFilters):init('weight', nninit.kaiming, {dist = 'uniform', gain = {'lrelu', leakiness = 0.3}}))
+cnn:add(nn.Linear(nFilters*15*15, nFilters):init('weight', nninit.kaiming, {
+  dist = 'uniform',
+  gain = {'lrelu', leakiness = 0.3}
+}))
 cnn:add(nn.RReLU(1/3, 1/3))
 cnn:add(nn.Linear(nFilters, 6):init('weight', nninit.orthogonal, {gain = 'relu'}))
 cnn:add(cudnn.ReLU())
