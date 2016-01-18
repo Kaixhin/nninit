@@ -9,7 +9,7 @@ source = {
 description = {
   summary = "Weight initialisation schemes for Torch7 neural network modules",
   detailed = [[
-                Weight initialisation schemes for Torch7 neural network modules
+                Weight initialisation schemes for Torch7 neural network modules.
   ]],
   homepage = "https://github.com/Kaixhin/nninit",
   license = "MIT"
@@ -24,10 +24,5 @@ build = {
   type = "builtin",
   modules = {
     nninit = "nninit.lua"
-  },
-  install = {
-    lua = {
-      nninit = "nninit.lua"
-    }
   }
 }
