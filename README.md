@@ -179,7 +179,7 @@ local model = nn.Sequential()
 model:add(nn.Sequencer(cnn))
 local lstm = nn.FastLSTM(hiddenSize, hiddenSize, rho)
 -- Note that chaining will pass through the module initialised, never parents
-lstm.i2g:init({'bias', {{3*hiddenSize-1, 3*hiddenSize}}}, nninit.constant, 1) -- High forget gate bias
+lstm.i2g:init({'bias', {{3*hiddenSize+1, 4*hiddenSize}}}, nninit.constant, 1) -- High forget gate bias
 model:add(nn.Sequencer(lstm))
 model:cuda()
 
