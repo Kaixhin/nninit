@@ -11,9 +11,9 @@ local function calcFan(module)
     return module.weight:size(2), module.weight:size(1)
   elseif typename:find('TemporalConvolution') then
     return module.weight:size(2), module.weight:size(1)
-  elseif typename:find('SpatialConvolution') then
+  elseif typename:find('SpatialConvolution') or typename:find('SpatialFullConvolution') then
     return module.nInputPlane * module.kW * module.kH, module.nOutputPlane * module.kW * module.kH
-  elseif typename:find('VolumetricConvolution') then
+  elseif typename:find('VolumetricConvolution') or typename:find('VolumetricFullConvolution') then
     return module.nInputPlane * module.kT * module.kW * module.kH, module.nOutputPlane * module.kT * module.kW * module.kH
   else
     error("Unsupported module")
@@ -150,9 +150,9 @@ nninit.eye = function(module, tensor)
     for i = 1, module.inputFrameSize do
       tensor[{{}, {(i-1)*module.kW + math.ceil(module.kW/2)}}]:fill(1/module.inputFrameSize)
     end
-  elseif typename:find('SpatialConvolution') then
+  elseif typename:find('SpatialConvolution') or typename:find('SpatialFullConvolution') then
     tensor:zero():view(module.nInputPlane, module.nOutputPlane, module.kW, module.kH)[{{}, {}, math.ceil(module.kW/2), math.ceil(module.kH/2)}]:fill(1/module.nInputPlane)
-  elseif typename:find('VolumetricConvolution') then
+  elseif typename:find('VolumetricConvolution') or typename:find('VolumetricFullConvolution') then
     tensor:zero():view(module.nInputPlane, module.nOutputPlane, module.kT, module.kW, module.kH)[{{}, {}, math.ceil(module.kT/2), math.ceil(module.kW/2), math.ceil(module.kH/2)}]:fill(1/module.nInputPlane)
   else
     error("Unsupported module for 'eye'")
