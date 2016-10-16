@@ -225,7 +225,6 @@ nninit.orthogonal = function(module, tensor, options)
   local fanOut = sizes[1]
   for d = 3, #sizes do
     fanIn = fanIn * sizes[d]
-    fanOut = fanOut * sizes[d]
   end
 
   options = options or {}
