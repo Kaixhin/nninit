@@ -129,6 +129,7 @@ Gains can be calculated depending on the succeeding nonlinearity. If `gain` is a
 |-----------|------------|-----------------------------|
 | 'linear'  |            | 1                           |
 | 'sigmoid' |            | 1                           |
+| 'tanh'    |            | 5 / 3                       |
 | 'relu'    |            | sqrt(2)                     |
 | 'lrelu'   | leakiness  | sqrt(2 / (1 + leakiness^2)) |
 
