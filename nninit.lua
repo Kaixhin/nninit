@@ -37,6 +37,8 @@ local function calcGain(gain)
   -- Process gain strings with optional args
   if gain == 'linear' or gain == 'sigmoid' then
     return 1
+  elseif gain == 'tanh' then
+    return 5 / 3
   elseif gain == 'relu' then
     return math.sqrt(2)
   elseif gain == 'lrelu' then
