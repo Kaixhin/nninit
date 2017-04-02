@@ -117,6 +117,13 @@ Sets `(1 - sparsity)` percent of the tensor to 0, where `sparsity` is between 0 
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
 
+#### nninit.convaware(module, tensor, [{[std]}])
+**Only supports 2D convolutions with a symmetric filter size.**  
+Fills convolution tensor with matrices that are orthogonal in the frequency space.  
+Optional named parameter `std` can be passed in via a table. It specifies the noise to break symmetry in the inverse Fourier transform.
+
+> Aghajanyan, A. (2017). Convolution Aware Initialization. *arXiv preprint arXiv:1702.06295*.
+
 ### Dists
 
 The 2 types of distribution supported are `'normal'` and `'uniform'`.
