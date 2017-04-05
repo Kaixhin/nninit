@@ -275,20 +275,19 @@ end
 --  Convolution Aware Initialization
 --  arXiv preprint arXiv:1702.06295
 --]]
-nninit.convaware = function(module, tensor, options)
+nninit.convolutionAware = function(module, tensor, options)
   -- The author of the paper provided a reference implementation for Keras: https://github.com/farizrahman4u/keras-contrib/pull/60
 
+  -- Make sure that the signal library is available, which provides the Fourier transform
+  local hasSignal, signal = pcall(require, 'signal')
+  if hasSignal == false then
+    error("nninit.convaware requires the signal library, please make sure to install it: https://github.com/soumith/torch-signal")
+  end
+
+  -- Check the size of the convolution tensor, right now, only 2d convolution tensors are supported
   local sizes = tensor:size()
   if #sizes ~= 4 then
     error("nninit.convaware only supports 2d convolutions, feel free to issue a pull request to extend this implementation")
-  end
-
-  -- Make sure that the signal library is available, which provides the Fourier transform
-  local requireSignal = function()
-    require('signal')
-  end
-  if pcall(requireSignal) == false then
-    error("nninit.convaware requires the signal library, please make sure to install it: https://github.com/soumith/torch-signal")
   end
 
   -- Store the sizes of the convolution tensor to make the implementation easier to read
@@ -311,7 +310,7 @@ nninit.convaware = function(module, tensor, options)
   std = options.std or 0.05
 
   -- Specify the variables for the frequency domain tensor
-  local fourierTensor = require('signal').rfft2(torch.zeros(filterRows, filterCols))
+  local fourierTensor = signal.rfft2(torch.zeros(filterRows, filterCols))
   local fourierRows = fourierTensor:size(1)
   local fourierCols = fourierTensor:size(2)
   local fourierSize = fourierRows * fourierCols
@@ -347,7 +346,7 @@ nninit.convaware = function(module, tensor, options)
       fourierTensor[{ {}, {}, { 2 } }]:zero()
 
       -- Unlike the Numpy implementation, the inverse Fourier transform in the signal library does sadly only support a single size argument
-      tensor[{ { filterIndex }, { basisIndex }, {}, {} }] = require('signal').irfft2(fourierTensor, filterRows) + torch.zeros(filterRows, filterCols):normal(0.0, std)
+      tensor[{ { filterIndex }, { basisIndex }, {}, {} }] = signal.irfft2(fourierTensor, filterRows) + torch.zeros(filterRows, filterCols):normal(0.0, std)
     end
 
     -- Clear the orthogonal tensor buffer, we do not want to reuse it for the next filter
