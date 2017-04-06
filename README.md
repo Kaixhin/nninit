@@ -100,7 +100,7 @@ Also known as Glorot initialisation.
 
 #### nninit.kaiming(module, tensor, [{[dist], [gain]}])
 Fills tensor with `stdv = gain * sqrt(1 / fanIn)`. Uses the normal distribution by default.  
-Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table.  
+Optional named parameters [`dist`](#dists) and [`gain`](#gains) can be passed in via a table. The initialisation scheme typically includes the gain for ReLU units, which has to be manually specified in `nninit.kaiming` with the option `{gain = 'relu'}`.  
 Also known as He initialisation.
 
 > He, K., Zhang, X., Ren, S., & Sun, J. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. *arXiv preprint arXiv:1502.01852*.
