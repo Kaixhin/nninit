@@ -1,4 +1,5 @@
 local nn = require 'nn'
+local hasSignal, signal = pcall(require, 'signal')
 
 -- Helper functions
 
@@ -266,6 +267,96 @@ nninit.sparse = function(module, tensor, sparsity)
 
   -- Zero out selected indices
   tensor:view(nElements):indexFill(1, sparseIndices, 0)
+
+  return module
+end
+
+--[[
+--  Aghajanyan, A. (2017)
+--  Convolution Aware Initialization
+--  arXiv preprint arXiv:1702.06295
+--]]
+nninit.convolutionAware = function(module, tensor, options)
+  -- The author of the paper provided a reference implementation for Keras: https://github.com/farizrahman4u/keras-contrib/pull/60
+
+  -- Make sure that the signal library is available, which provides the Fourier transform
+  if hasSignal == false then
+    error("nninit.convolutionAware requires the signal library, please make sure to install it: https://github.com/soumith/torch-signal")
+  end
+
+  -- Check the size of the convolution tensor, right now, only 2d convolution tensors are supported
+  local sizes = tensor:size()
+  if #sizes ~= 4 then
+    error("nninit.convolutionAware only supports 2d convolutions, feel free to issue a pull request to extend this implementation")
+  end
+
+  -- Store the sizes of the convolution tensor to make the implementation easier to read
+  local filterCount = sizes[1]
+  local filterStacks = sizes[2]
+  local filterRows = sizes[3]
+  local filterCols = sizes[4]
+
+  -- Due to the irfft2 interface of the signal library, we currently have to restrict the filter size
+  if filterRows ~= filterCols then
+    error("nninit.convolutionAware requires the filters to have the same number of rows and columns, feel free to issue a pull request to extend this implementation")
+  end
+
+  -- Calculate "fanIn" and "fanOut" for 2d convolution tensors based on module conventions
+  local fanIn = filterStacks * filterRows * filterCols
+  local fanOut = filterCount * filterRows * filterCols
+
+  -- Setup options where "std" specifies the noise to break symmetry in the inverse Fourier transform
+  options = options or {}
+  gain = calcGain(options.gain)
+  std = options.std or 0.05
+
+  -- Specify the variables for the frequency domain tensor
+  local fourierTensor = signal.rfft2(torch.zeros(filterRows, filterCols))
+  local fourierRows = fourierTensor:size(1)
+  local fourierCols = fourierTensor:size(2)
+  local fourierSize = fourierRows * fourierCols
+
+  -- Specify the variables for the orthogonal tensor buffer
+  local orthogonalIndex = fourierSize
+  local orthogonalTensor = nil
+
+  -- For each filter, create a suitable basis tensor and perform an inverse Fourier transform to obtain the filter coefficients
+  for filterIndex = 1, filterCount do
+    basisTensor = torch.zeros(filterStacks, fourierSize)
+
+    -- Create a suitable basis tensor using the orthogonal tensor buffer, making sure to refill the buffer should it be empty
+    for basisIndex = 1, filterStacks do
+      if orthogonalIndex == fourierSize then
+        local randomTensor = torch.zeros(fourierSize, fourierSize):normal(0.0, 1.0)
+        local symmetricTensor = randomTensor + randomTensor:t() - torch.diag(randomTensor:diag())
+
+        orthogonalIndex = 0
+        orthogonalTensor, _, _ = torch.svd(symmetricTensor)
+      end
+
+      -- Copy a column from the orthogonal tensor buffer into the basis tensor
+      orthogonalIndex = orthogonalIndex + 1
+      basisTensor[{ { basisIndex }, {} }] = orthogonalTensor[{ {}, { orthogonalIndex } }]
+    end
+
+    basisTensor = basisTensor:view(filterStacks, fourierRows, fourierCols)
+
+    -- Perform the inverse Fourier transform from the basis tensor to obtain the filter coefficients, making sure to break the symmetry
+    for basisIndex = 1, filterStacks do
+      fourierTensor[{ {}, {}, { 1 } }] = basisTensor[{ { basisIndex }, {} }]
+      fourierTensor[{ {}, {}, { 2 } }]:zero()
+
+      -- Unlike the Numpy implementation, the inverse Fourier transform in the signal library does sadly only support a single size argument
+      tensor[{ { filterIndex }, { basisIndex }, {}, {} }] = signal.irfft2(fourierTensor, filterRows) + torch.zeros(filterRows, filterCols):normal(0.0, std)
+    end
+
+    -- Clear the orthogonal tensor buffer, we do not want to reuse it for the next filter
+    orthogonalIndex = fourierSize
+    orthogonalTensor = nil
+  end
+
+  -- Scale the filter variance to match the variance scheme defined by He-normal initialization
+  tensor:mul(gain * torch.sqrt((1.0 / fanIn) * (1.0 / tensor:var())))
 
   return module
 end
