@@ -1,4 +1,5 @@
 local nn = require 'nn'
+local hasSignal, signal = pcall(require, 'signal')
 
 -- Helper functions
 
@@ -279,15 +280,14 @@ nninit.convolutionAware = function(module, tensor, options)
   -- The author of the paper provided a reference implementation for Keras: https://github.com/farizrahman4u/keras-contrib/pull/60
 
   -- Make sure that the signal library is available, which provides the Fourier transform
-  local hasSignal, signal = pcall(require, 'signal')
   if hasSignal == false then
-    error("nninit.convaware requires the signal library, please make sure to install it: https://github.com/soumith/torch-signal")
+    error("nninit.convolutionAware requires the signal library, please make sure to install it: https://github.com/soumith/torch-signal")
   end
 
   -- Check the size of the convolution tensor, right now, only 2d convolution tensors are supported
   local sizes = tensor:size()
   if #sizes ~= 4 then
-    error("nninit.convaware only supports 2d convolutions, feel free to issue a pull request to extend this implementation")
+    error("nninit.convolutionAware only supports 2d convolutions, feel free to issue a pull request to extend this implementation")
   end
 
   -- Store the sizes of the convolution tensor to make the implementation easier to read
@@ -298,7 +298,7 @@ nninit.convolutionAware = function(module, tensor, options)
 
   -- Due to the irfft2 interface of the signal library, we currently have to restrict the filter size
   if filterRows ~= filterCols then
-    error("nninit.convaware requires the filters to have the same number of rows and columns, feel free to issue a pull request to extend this implementation")
+    error("nninit.convolutionAware requires the filters to have the same number of rows and columns, feel free to issue a pull request to extend this implementation")
   end
 
   -- Calculate "fanIn" and "fanOut" for 2d convolution tensors based on module conventions
@@ -307,6 +307,7 @@ nninit.convolutionAware = function(module, tensor, options)
 
   -- Setup options where "std" specifies the noise to break symmetry in the inverse Fourier transform
   options = options or {}
+  gain = calcGain(options.gain)
   std = options.std or 0.05
 
   -- Specify the variables for the frequency domain tensor
@@ -355,7 +356,7 @@ nninit.convolutionAware = function(module, tensor, options)
   end
 
   -- Scale the filter variance to match the variance scheme defined by He-normal initialization
-  tensor:mul(torch.sqrt((2.0 / fanIn) * (1.0 / tensor:var())))
+  tensor:mul(gain * torch.sqrt((1.0 / fanIn) * (1.0 / tensor:var())))
 
   return module
 end
