@@ -117,10 +117,11 @@ Sets `(1 - sparsity)` percent of the tensor to 0, where `sparsity` is between 0 
 
 > Martens, J. (2010). Deep learning via Hessian-free optimization. In *Proceedings of the 27th International Conference on Machine Learning (ICML-10)*.
 
-#### nninit.convolutionAware(module, tensor, [{[std]}])
+#### nninit.convolutionAware(module, tensor, [{[gain], [std]}])
 **Only supports 2D convolutions with a symmetric filter size.**  
-Fills convolution tensor with matrices that are orthogonal in the frequency space.  
-Optional named parameter `std` can be passed in via a table. It specifies the noise to break symmetry in the inverse Fourier transform.
+Fills convolution tensor with matrices that are orthogonal in the frequency space.
+The initialisation scheme described in the paper includes the gain for ReLU units, which has to be manually specified with the option `{gain = 'relu'}`.
+The optional named parameter `std` can be passed in via a table. It specifies the noise to break symmetry in the inverse Fourier transform.
 
 > Aghajanyan, A. (2017). Convolution Aware Initialization. *arXiv preprint arXiv:1702.06295*.
 
